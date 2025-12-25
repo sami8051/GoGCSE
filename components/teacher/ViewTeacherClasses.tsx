@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '../../services/firebase';
+import { db, auth } from '../../services/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { Classroom } from '../../types';
 import { ArrowLeft, Users, BookOpen } from 'lucide-react';
@@ -11,25 +11,27 @@ const ViewTeacherClasses: React.FC = () => {
     const [classes, setClasses] = useState<Classroom[]>([]);
     const [loading, setLoading] = useState(true);
     const [teacherName, setTeacherName] = useState<string>('');
+    const targetIsSelf = !teacherId || (auth.currentUser && teacherId === auth.currentUser.uid);
+    const effectiveTeacherId = teacherId || auth.currentUser?.uid;
 
     useEffect(() => {
-        if (teacherId) {
+        if (effectiveTeacherId) {
             loadTeacherAndClasses();
         }
-    }, [teacherId]);
+    }, [teacherId, auth.currentUser]);
 
     const loadTeacherAndClasses = async () => {
-        if (!teacherId) return;
+        if (!effectiveTeacherId) return;
         setLoading(true);
         try {
             // Get teacher name
-            const userDoc = await getDoc(doc(db, 'users', teacherId));
+            const userDoc = await getDoc(doc(db, 'users', effectiveTeacherId));
             if (userDoc.exists()) {
                 setTeacherName(userDoc.data().displayName || userDoc.data().email || 'Teacher');
             }
 
             // Get all classes for this teacher
-            const q = query(collection(db, 'classes'), where('teacherId', '==', teacherId));
+            const q = query(collection(db, 'classes'), where('teacherId', '==', effectiveTeacherId));
             const snapshot = await getDocs(q);
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Classroom));
             setClasses(data.sort((a, b) => b.createdAt - a.createdAt));
@@ -58,13 +60,15 @@ const ViewTeacherClasses: React.FC = () => {
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
-            <button
-                onClick={() => navigate('/admin/users')}
-                className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors mb-6 font-medium"
-            >
-                <ArrowLeft size={18} />
-                Back to Users
-            </button>
+            {!targetIsSelf && (
+                <button
+                    onClick={() => navigate('/admin/users')}
+                    className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors mb-6 font-medium"
+                >
+                    <ArrowLeft size={18} />
+                    Back to Users
+                </button>
+            )}
 
             <div className="flex justify-between items-center mb-8">
                 <div>

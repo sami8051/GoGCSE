@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, ChevronLeft, ChevronRight, Moon, Sun, Home, LogOut, Users } from 'lucide-react';
-import { auth, logOut } from '../../services/firebase';
+import { auth, logOut, checkIsAdmin } from '../../services/firebase';
 
 const TeacherLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [collapsed, setCollapsed] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [darkMode, setDarkMode] = useState(() => {
         return localStorage.getItem('teacherDarkMode') === 'true';
     });
+
+    useEffect(() => {
+        if (auth.currentUser) {
+            checkIsAdmin(auth.currentUser.uid).then(setIsAdmin);
+        }
+    }, []);
 
     useEffect(() => {
         localStorage.setItem('teacherDarkMode', darkMode.toString());
@@ -49,10 +56,14 @@ const TeacherLayout: React.FC = () => {
         } ${collapsed ? 'justify-center' : ''}`;
 
     const navItems = [
-        { to: '/teacher', icon: LayoutDashboard, label: 'Dashboard', end: true },
-        { to: '/teacher/students', icon: Users, label: 'Student Dictionary' },
-        { to: '/admin', icon: Home, label: 'Back to Admin' },
+        { to: '/teacher', icon: LayoutDashboard, label: 'Overview', end: true },
+        { to: '/teacher/classes', icon: BookOpen, label: 'My Classes' },
+        { to: '/teacher/students', icon: Users, label: 'Student Directory' },
     ];
+
+    if (isAdmin) {
+        navItems.push({ to: '/admin', icon: Home, label: 'Back to Admin' });
+    }
 
     return (
         <div className={`flex h-screen ${darkMode ? 'bg-slate-900' : 'bg-gray-100'}`}>

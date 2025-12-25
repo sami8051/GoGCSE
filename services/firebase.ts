@@ -104,6 +104,17 @@ export const checkIsAdmin = async (userId: string): Promise<boolean> => {
     }
 };
 
+// Check if user is a teacher based on Firestore profile
+export const checkIsTeacher = async (userId: string): Promise<boolean> => {
+    try {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        return userDoc.exists() && userDoc.data().isTeacher === true;
+    } catch (error) {
+        console.error("Error checking teacher status:", error);
+        return false;
+    }
+};
+
 export const saveUserConsent = async (
     userId: string,
     email: string,
