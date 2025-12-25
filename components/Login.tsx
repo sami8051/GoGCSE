@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { signInWithGoogle, registerWithEmailAndPassword, logInWithEmailAndPassword, sendVerification, saveUserConsent, checkUserConsent, updateUserConsent } from '../services/firebase';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, UserPlus, AlertTriangle, CheckCircle, ExternalLink, Shield, Info } from 'lucide-react';
 import appLogo from '../assets/logo.png';
-import { getAuth, getRedirectResult } from 'firebase/auth';
 
 type AgeGroup = 'under13' | '13-15' | '16-17' | '18+' | 'parent' | 'teacher';
 
@@ -29,48 +28,6 @@ const Login: React.FC = () => {
     const requiresParentalConfirmation = ageGroup === '13-15';
     const isUnder13 = ageGroup === 'under13';
 
-    // Handle Google Sign-In redirect result on component mount
-    useEffect(() => {
-        const handleRedirectResult = async () => {
-            const auth = getAuth();
-            try {
-                setIsLoading(true);
-                console.log('Checking for redirect result...');
-                const result = await getRedirectResult(auth);
-                if (result && result.user) {
-                    console.log('Google Sign-In successful, user:', result.user.email);
-                    // Check if user has already consented
-                    const hasConsented = await checkUserConsent(result.user.uid);
-
-                    if (hasConsented) {
-                        navigate('/dashboard');
-                    } else {
-                        navigate('/legal-consent');
-                    }
-                } else {
-                    console.log('No redirect result found (normal for first load)');
-                }
-            } catch (error: any) {
-                console.error("Google Sign-In redirect failed:", error);
-                console.error("Error code:", error.code);
-                console.error("Error message:", error.message);
-                
-                // Show user-friendly error messages
-                if (error.code === 'auth/unauthorized-domain') {
-                    setError('Domain not authorized. Please add this domain to Firebase Authentication settings.');
-                } else if (error.code === 'auth/operation-not-allowed') {
-                    setError('Google Sign-In is not enabled. Please enable it in Firebase Console.');
-                } else if (error.code !== 'auth/popup-closed-by-user') {
-                    setError(`Failed to sign in with Google: ${error.message || 'Unknown error'}`);
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        handleRedirectResult();
-    }, [navigate]);
-
     const canRegister = () => {
         if (!ageGroup || isUnder13) return false;
         if (!termsAccepted || !disclaimerAccepted) return false;
@@ -82,17 +39,22 @@ const Login: React.FC = () => {
 
     const handleGoogleLogin = async () => {
         setIsLoading(true);
-        setError('');
         try {
-            console.log('Initiating Google Sign-In redirect...');
-            // This will redirect to Google sign-in page
-            await signInWithGoogle();
-            // User will be redirected away, then back to this page
-            // The redirect result is handled in useEffect
-            console.log('Redirect initiated successfully');
+            const user = await signInWithGoogle();
+
+            // Check if user has already consented
+            const hasConsented = await checkUserConsent(user.uid);
+
+            if (hasConsented) {
+                navigate('/dashboard');
+            } else {
+                // IMPORTANT: Redirect to Legal Consent Gate
+                navigate('/legal-consent');
+            }
         } catch (error: any) {
             console.error("Google Sign-In Failure:", error);
             setError(`Failed to sign in with Google. ${error.message || ''}`);
+        } finally {
             setIsLoading(false);
         }
     };

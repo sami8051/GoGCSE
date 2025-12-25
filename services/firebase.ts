@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import { getFirestore, collection, addDoc, query, where, getDocs, orderBy, limit, Timestamp, doc, updateDoc, deleteDoc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { ExamResult, PaperType, ExamPaper, StudentAnswer } from "../types";
 
@@ -254,11 +254,8 @@ export const logLoginEvent = async (email: string, success: boolean, reason?: st
 
 export const signInWithGoogle = async () => {
     try {
-        // Use redirect instead of popup - opens in same page
-        await signInWithRedirect(auth, provider);
-        // Note: The redirect will navigate away from this page.
-        // After successful sign-in, Firebase will redirect back to the app.
-        // The result will be handled by getRedirectResult in the component.
+        const result = await signInWithPopup(auth, provider);
+        return result.user;
     } catch (error) {
         console.error("Error signing in", error);
         throw error;
