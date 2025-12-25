@@ -35,6 +35,7 @@ import AdminAssets from './components/admin/AdminAssets';
 import AdminSecurity from './components/admin/AdminSecurity';
 
 import TeacherDashboard from './components/teacher/TeacherDashboard';
+import TeacherOverview from './components/teacher/TeacherOverview';
 import ClassManager from './components/teacher/ClassManager';
 import AssignmentBuilder from './components/teacher/AssignmentBuilder';
 import ViewTeacherClasses from './components/teacher/ViewTeacherClasses';
@@ -134,9 +135,9 @@ const AppContent: React.FC = () => {
 
           {/* Teacher Classroom Routes with Layout */}
           <Route path="/teacher" element={<TeacherRoute><TeacherLayout /></TeacherRoute>}>
-            <Route index element={<TeacherDashboard />} />
+            <Route index element={<TeacherOverview />} />
+            <Route path="classes" element={<TeacherDashboard />} />
             <Route path="students" element={<StudentDictionary />} />
-            <Route path="classes" element={<ViewTeacherClasses />} />
             <Route path="view/:teacherId" element={<ViewTeacherClasses />} />
             <Route path="class/:classId" element={<ClassManager />} />
             <Route path="class/:classId/assignments" element={<ClassManager />} />

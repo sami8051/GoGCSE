@@ -110,8 +110,8 @@ const TeacherDashboard: React.FC = () => {
         <div className="p-8 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Teacher Dashboard</h1>
-                    <p className="text-slate-500 mt-1">Manage your classes and assignments.</p>
+                    <h1 className="text-3xl font-bold text-slate-900">My Classes</h1>
+                    <p className="text-slate-500 mt-1">Create and manage your classrooms.</p>
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}

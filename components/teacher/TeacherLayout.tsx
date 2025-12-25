@@ -56,7 +56,7 @@ const TeacherLayout: React.FC = () => {
         } ${collapsed ? 'justify-center' : ''}`;
 
     const navItems = [
-        { to: '/teacher', icon: LayoutDashboard, label: 'Dashboard', end: true },
+        { to: '/teacher', icon: BarChart3, label: 'Overview', end: true },
         { to: '/teacher/classes', icon: BookOpen, label: 'My Classes' },
         { to: '/teacher/students', icon: Users, label: 'Student Directory' },
     ];
