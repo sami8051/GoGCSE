@@ -34,8 +34,10 @@ const Login: React.FC = () => {
         const handleRedirectResult = async () => {
             const auth = getAuth();
             try {
+                setIsLoading(true);
                 const result = await getRedirectResult(auth);
                 if (result && result.user) {
+                    console.log('Google Sign-In successful, user:', result.user.email);
                     // Check if user has already consented
                     const hasConsented = await checkUserConsent(result.user.uid);
 
@@ -47,7 +49,11 @@ const Login: React.FC = () => {
                 }
             } catch (error: any) {
                 console.error("Google Sign-In redirect failed:", error);
-                setError(`Failed to sign in with Google. ${error.message || ''}`);
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    setError(`Failed to sign in with Google. ${error.message || ''}`);
+                }
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -65,11 +71,14 @@ const Login: React.FC = () => {
 
     const handleGoogleLogin = async () => {
         setIsLoading(true);
+        setError('');
         try {
+            console.log('Initiating Google Sign-In redirect...');
             // This will redirect to Google sign-in page
             await signInWithGoogle();
             // User will be redirected away, then back to this page
             // The redirect result is handled in useEffect
+            console.log('Redirect initiated successfully');
         } catch (error: any) {
             console.error("Google Sign-In Failure:", error);
             setError(`Failed to sign in with Google. ${error.message || ''}`);
