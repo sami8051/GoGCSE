@@ -439,35 +439,37 @@ const AdminSettings: React.FC = () => {
                                     return;
                                 }
 
-                                // Show validating state
-                                setMessage({ type: 'success', text: '⏳ Validating API key...' });
+                                // Show saving state
+                                setMessage({ type: 'success', text: '⏳ Saving API key...' });
 
                                 try {
-                                    // Test the API key by making a simple request
-                                    const testResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-
-                                    if (!testResponse.ok) {
-                                        const errorData = await testResponse.json();
-                                        setMessage({ type: 'error', text: `Invalid API key: ${errorData.error?.message || 'Authentication failed'}` });
-                                        return;
-                                    }
-
-                                    // Key is valid, now save it
+                                    // Save directly to Firestore without browser validation (avoids CORS)
                                     const docRef = doc(db, 'systemSettings', 'config');
                                     await setDoc(docRef, { geminiApiKey: key }, { merge: true });
 
                                     // Also save to local storage for client-side convenience
                                     localStorage.setItem('gemini_api_key', key);
 
-                                    setMessage({ type: 'success', text: '✅ API key validated and saved successfully! Restart the server to apply.' });
-                                    setTimeout(() => setMessage(null), 5000);
+                                    // Log activity
+                                    await addDoc(collection(db, 'activityLogs'), {
+                                        action: 'API Key Updated',
+                                        actionType: 'update',
+                                        targetType: 'system',
+                                        targetId: 'gemini-api-key',
+                                        details: 'Gemini API key updated by super admin',
+                                        userId: auth.currentUser?.uid || 'unknown',
+                                        userEmail: auth.currentUser?.email || 'unknown',
+                                        timestamp: serverTimestamp()
+                                    });
+
+                                    setMessage({ type: 'success', text: '✅ API key saved successfully! Restart the server to apply changes.' });
+                                    setTimeout(() => {
+                                        setMessage(null);
+                                        checkApiKeyStatus(); // Refresh status
+                                    }, 3000);
                                 } catch (error: any) {
-                                    console.error("Failed to validate/save API key:", error);
-                                    if (error.message?.includes('fetch')) {
-                                        setMessage({ type: 'error', text: 'Network error. Please check your connection.' });
-                                    } else {
-                                        setMessage({ type: 'error', text: 'Failed to save API key. Check Firestore permissions.' });
-                                    }
+                                    console.error("Failed to save API key:", error);
+                                    setMessage({ type: 'error', text: 'Failed to save API key. Check Firestore permissions.' });
                                 }
                             }}
                             className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium flex items-center gap-2"
