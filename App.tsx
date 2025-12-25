@@ -28,6 +28,7 @@ import AdminExamList from './components/admin/AdminExamList';
 import AdminLabSessions from './components/admin/AdminLabSessions';
 import AdminSettings from './components/admin/AdminSettings';
 import AdminLogin from './components/admin/AdminLogin';
+import AdminStaffDirectory from './components/admin/AdminStaffDirectory';
 import AdminAnnouncements from './components/admin/AdminAnnouncements';
 import AdminActivityLog from './components/admin/AdminActivityLog';
 import AdminAssets from './components/admin/AdminAssets';
@@ -73,95 +74,96 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Hide footer on admin and teacher control pages
   const hideFooter = location.pathname.startsWith('/admin') || location.pathname.startsWith('/teacher');
 
   return (
     <>
-    <div className="flex flex-col min-h-screen">
-      <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/legal-consent" element={<LegalConsent />} />
-      <Route path="/pending-approval" element={<PendingApproval />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/cookies" element={<CookiePolicy />} />
-      <Route path="/acceptable-use" element={<AcceptableUse />} />
-      <Route path="/child-privacy" element={<ChildPrivacy />} />
-      <Route path="/admin/login" element={<AdminLogin />} />
+      <div className="flex flex-col min-h-screen">
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/legal-consent" element={<LegalConsent />} />
+          <Route path="/pending-approval" element={<PendingApproval />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/cookies" element={<CookiePolicy />} />
+          <Route path="/acceptable-use" element={<AcceptableUse />} />
+          <Route path="/child-privacy" element={<ChildPrivacy />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
 
-      {/* Protected Routes */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <div className="flex flex-col min-h-screen">
-            <Dashboard />
-          </div>
-        </ProtectedRoute>
-      } />
+          {/* Protected Routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <div className="flex flex-col min-h-screen">
+                <Dashboard />
+              </div>
+            </ProtectedRoute>
+          } />
 
-      {/* Admin Routes */}
-      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="users" element={<AdminUserList />} />
-        <Route path="exams" element={<AdminExamList />} />
-        <Route path="lab-sessions" element={<AdminLabSessions />} />
-        <Route path="analytics" element={<AdminDashboard />} />
-        <Route path="announcements" element={<AdminAnnouncements />} />
-        <Route path="assets" element={<AdminAssets />} />
-        <Route path="activity-log" element={<AdminActivityLog />} />
-        <Route path="security" element={<AdminSecurity />} />
-        <Route path="settings" element={<AdminSettings />} />
-      </Route>
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUserList />} />
+            <Route path="exams" element={<AdminExamList />} />
+            <Route path="lab-sessions" element={<AdminLabSessions />} />
+            <Route path="analytics" element={<AdminDashboard />} />
+            <Route path="announcements" element={<AdminAnnouncements />} />
+            <Route path="assets" element={<AdminAssets />} />
+            <Route path="activity-log" element={<AdminActivityLog />} />
+            <Route path="security" element={<AdminSecurity />} />
+            <Route path="directory" element={<AdminStaffDirectory />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
 
-      {/* Exam Routes - Passing data via state */}
-      <Route path="/exam/:type" element={
-        <ProtectedRoute>
-          <ExamRoute />
-        </ProtectedRoute>
-      } />
-      <Route path="/results" element={
-        <ProtectedRoute>
-          <div className="flex flex-col min-h-screen">
-            <ResultsRoute />
-          </div>
-        </ProtectedRoute>
-      } />
+          {/* Exam Routes - Passing data via state */}
+          <Route path="/exam/:type" element={
+            <ProtectedRoute>
+              <ExamRoute />
+            </ProtectedRoute>
+          } />
+          <Route path="/results" element={
+            <ProtectedRoute>
+              <div className="flex flex-col min-h-screen">
+                <ResultsRoute />
+              </div>
+            </ProtectedRoute>
+          } />
 
-      {/* Teacher Classroom Routes with Layout */}
-      <Route path="/teacher" element={<AdminRoute><TeacherLayout /></AdminRoute>}>
-        <Route index element={<TeacherDashboard />} />
-        <Route path="students" element={<StudentDictionary />} />
-        <Route path="view/:teacherId" element={<ViewTeacherClasses />} />
-        <Route path="class/:classId" element={<ClassManager />} />
-        <Route path="class/:classId/assignments" element={<ClassManager />} />
-        <Route path="class/:classId/create-assignment" element={<AssignmentBuilder />} />
-      </Route>
+          {/* Teacher Classroom Routes with Layout */}
+          <Route path="/teacher" element={<AdminRoute><TeacherLayout /></AdminRoute>}>
+            <Route index element={<TeacherDashboard />} />
+            <Route path="students" element={<StudentDictionary />} />
+            <Route path="view/:teacherId" element={<ViewTeacherClasses />} />
+            <Route path="class/:classId" element={<ClassManager />} />
+            <Route path="class/:classId/assignments" element={<ClassManager />} />
+            <Route path="class/:classId/create-assignment" element={<AssignmentBuilder />} />
+          </Route>
 
-      {/* Student Classroom Routes */}
-      <Route path="/student/classroom" element={
-        <ProtectedRoute>
-          <StudentClassroom />
-        </ProtectedRoute>
-      } />
-      {/* Note: /student/class/:classId not strictly needed if dashboard lists assignments, but nice to have. 
+          {/* Student Classroom Routes */}
+          <Route path="/student/classroom" element={
+            <ProtectedRoute>
+              <StudentClassroom />
+            </ProtectedRoute>
+          } />
+          {/* Note: /student/class/:classId not strictly needed if dashboard lists assignments, but nice to have. 
           For Phase 1, StudentClassroom lists classes, click -> maybe go to specific view?
           Let's stick to AssignmentRunner for now. */}
-      {/* Route to take an assignment */}
-      <Route path="/student/assignment/:assignmentId" element={
-        <ProtectedRoute>
-          <AssignmentRunner />
-        </ProtectedRoute>
-      } />
+          {/* Route to take an assignment */}
+          <Route path="/student/assignment/:assignmentId" element={
+            <ProtectedRoute>
+              <AssignmentRunner />
+            </ProtectedRoute>
+          } />
 
-      <Route path="/language-lab" element={<div className="flex flex-col min-h-screen"><LanguageLab onHome={() => navigate('/')} /></div>} />
+          <Route path="/language-lab" element={<div className="flex flex-col min-h-screen"><LanguageLab onHome={() => navigate('/')} /></div>} />
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </div>
-    {!hideFooter && <Footer />}
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </div>
+      {!hideFooter && <Footer />}
     </>
   );
 };

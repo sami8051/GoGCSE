@@ -67,6 +67,7 @@ const AdminLayout: React.FC = () => {
     ];
 
     const superAdminItems = [
+        { to: '/admin/directory', icon: Users, label: 'Admin Directory' },
         { to: '/admin/activity-log', icon: Activity, label: 'Activity Log' },
         { to: '/admin/security', icon: Shield, label: 'Security' },
         { to: '/admin/settings', icon: Settings, label: 'Settings' },
