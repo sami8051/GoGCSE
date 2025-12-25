@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, ADMIN_EMAILS, checkIsAdmin } from './services/firebase';
 import { Sparkles } from 'lucide-react';
@@ -72,8 +72,13 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Hide footer on admin and teacher control pages
+  const hideFooter = location.pathname.startsWith('/admin') || location.pathname.startsWith('/teacher');
 
   return (
+    <>
     <div className="flex flex-col min-h-screen">
       <Routes>
       <Route path="/" element={<Landing />} />
@@ -156,18 +161,15 @@ const AppContent: React.FC = () => {
       <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
+    {!hideFooter && <Footer />}
+    </>
   );
 };
 
 const App: React.FC = () => {
   return (
     <Router>
-      <div className="flex flex-col min-h-screen">
-        <div className="flex-1">
-          <AppContent />
-        </div>
-        <Footer />
-      </div>
+      <AppContent />
       <CookieBanner />
     </Router>
   );
