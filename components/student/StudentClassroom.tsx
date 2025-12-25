@@ -66,11 +66,16 @@ const StudentClassroom: React.FC = () => {
         if (!joinCode || !auth.currentUser) return;
         setJoining(true);
         try {
+            console.log('[StudentClassroom] Attempting to join class with code:', joinCode.trim().toUpperCase());
+            console.log('[StudentClassroom] Current user UID:', auth.currentUser.uid);
+            console.log('[StudentClassroom] Current user display name:', auth.currentUser.displayName);
+            
             // 1. Find class by invite code
             const q = query(collection(db, 'classes'), where('inviteCode', '==', joinCode.trim().toUpperCase()));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
+                console.error('[StudentClassroom] No class found with code:', joinCode.trim().toUpperCase());
                 alert("Invalid class code.");
                 setJoining(false);
                 return;
@@ -79,19 +84,33 @@ const StudentClassroom: React.FC = () => {
             const classDoc = querySnapshot.docs[0];
             const classId = classDoc.id;
             const classData = classDoc.data();
+            console.log('[StudentClassroom] Found class:', classId, classData.name);
+
+            // Check if user is already a member
+            const memberDoc = await getDoc(doc(db, 'classes', classId, 'members', auth.currentUser.uid));
+            if (memberDoc.exists()) {
+                console.warn('[StudentClassroom] User is already a member of this class');
+                alert(`You are already enrolled in ${classData.name}!`);
+                setJoining(false);
+                return;
+            }
 
             // 2. Add student to class/members subcollection
+            console.log('[StudentClassroom] Adding member to class/members subcollection...');
             await setDoc(doc(db, 'classes', classId, 'members', auth.currentUser.uid), {
                 uid: auth.currentUser.uid,
                 displayName: auth.currentUser.displayName || 'Unknown Student',
                 joinedAt: Date.now()
             });
+            console.log('[StudentClassroom] Successfully added to class/members');
 
             // 3. Add class to user's enrolled_classes subcollection (for easy listing)
+            console.log('[StudentClassroom] Adding class to user/enrolled_classes subcollection...');
             await setDoc(doc(db, 'users', auth.currentUser.uid, 'enrolled_classes', classId), {
                 joinedAt: Date.now(),
                 name: classData.name
             });
+            console.log('[StudentClassroom] Successfully added to user/enrolled_classes');
 
             // 4. Update student count (optional, using increment would be better but simple read/write for now)
             // skipping count update for safety/conflict avoidance in client-side code
@@ -100,9 +119,22 @@ const StudentClassroom: React.FC = () => {
             setJoinCode("");
             loadMyClasses();
 
-        } catch (error) {
-            console.error("Join failed:", error);
-            alert("Failed to join class. Please try again.");
+        } catch (error: any) {
+            console.error('[StudentClassroom] Join failed with error:', error);
+            console.error('[StudentClassroom] Error code:', error.code);
+            console.error('[StudentClassroom] Error message:', error.message);
+            console.error('[StudentClassroom] Full error object:', error);
+            
+            let errorMessage = "Failed to join class. ";
+            if (error.code === 'permission-denied') {
+                errorMessage += "Permission denied. Make sure your account is approved.";
+            } else if (error.code) {
+                errorMessage += `Error: ${error.code}`;
+            } else {
+                errorMessage += "Please try again.";
+            }
+            
+            alert(errorMessage);
         }
         setJoining(false);
     };
