@@ -9,20 +9,6 @@
         "public": "dist",
         "cleanUrls": true,
         "parameters": {},
-        "redirects": [
-            {
-                "source": "/**",
-                "destination": "https://gogcse.com",
-                "type": 301,
-                "headers": [
-                    {
-                        "key": "X-Redirect-From",
-                        "value": "gcse-a7ffe.web.app"
-                    }
-                ],
-                "regex": "^https://gcse-a7ffe\\.web\\.app/(.*)$"
-            }
-        ],
         "rewrites": [
             {
                 "source": "/api/**",

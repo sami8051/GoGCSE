@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, setDoc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, addDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth'; // Added imports
 import { Shield, Check, AlertTriangle, FileText, Lock } from 'lucide-react';
@@ -45,19 +45,38 @@ const LegalConsent: React.FC = () => {
             const consentVersion = "2.0-dec-2024";
             const timestamp = serverTimestamp();
 
-            // 1. Ensure user document exists first (with merge to avoid overwriting)
-            await setDoc(doc(db, 'users', user.uid), {
-                email: user.email,
-                displayName: user.displayName || '',
-                photoURL: user.photoURL || '',
-                createdAt: timestamp,
-                hasConsented: true,
-                consentVersion,
-                consentedAt: timestamp,
-                status: 'pending', // Set to pending - requires admin approval
-                isApproved: false, // Mark as unapproved initially
-                updatedAt: timestamp
-            }, { merge: true });
+            // Check if user document already exists
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            const userExists = userDocSnap.exists();
+
+            // 1. Create or update user document
+            if (!userExists) {
+                // Creating new user - can set all fields including status and isApproved
+                await setDoc(userDocRef, {
+                    email: user.email,
+                    displayName: user.displayName || '',
+                    photoURL: user.photoURL || '',
+                    createdAt: timestamp,
+                    hasConsented: true,
+                    consentVersion,
+                    consentedAt: timestamp,
+                    status: 'pending', // Set to pending - requires admin approval
+                    isApproved: false, // Mark as unapproved initially
+                    updatedAt: timestamp
+                });
+            } else {
+                // User exists - only update non-protected fields
+                await setDoc(userDocRef, {
+                    email: user.email,
+                    displayName: user.displayName || '',
+                    photoURL: user.photoURL || '',
+                    hasConsented: true,
+                    consentVersion,
+                    consentedAt: timestamp,
+                    updatedAt: timestamp
+                }, { merge: true });
+            }
 
             // 2. Audit Trail: Create an immutable event record in userConsents/{uid}/events
             try {
