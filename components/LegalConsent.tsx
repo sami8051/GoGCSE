@@ -120,7 +120,7 @@ const LegalConsent: React.FC = () => {
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="bg-white max-w-2xl w-full rounded-2xl shadow-xl overflow-hidden border border-gray-100">
                 {/* Header */}
-                <div className="bg-edexcel-blue px-8 py-6 text-white text-center relative overflow-hidden">
+                <div className="bg-[#003764] px-8 py-6 text-white text-center relative overflow-hidden">
                     <div className="relative z-10">
                         <Shield className="mx-auto mb-3" size={48} />
                         <h1 className="text-2xl font-bold">Welcome to GoGCSE</h1>
@@ -162,13 +162,13 @@ const LegalConsent: React.FC = () => {
                                     type="checkbox"
                                     checked={agreedTerms}
                                     onChange={(e) => setAgreedTerms(e.target.checked)}
-                                    className="w-5 h-5 text-edexcel-blue rounded focus:ring-edexcel-teal cursor-pointer"
+                                    className="w-5 h-5 text-[#003764] rounded focus:ring-[#007fa3] cursor-pointer"
                                 />
                             </div>
                             <div>
                                 <div className="font-bold text-gray-900">Terms of Service (Required)</div>
                                 <div className="text-sm text-gray-500 mt-1">
-                                    I agree to the GoGCSE <a href="/terms" target="_blank" className="text-edexcel-blue underline hover:text-edexcel-teal" onClick={(e) => e.stopPropagation()}>Terms of Service</a>, including the limitation of liability and acceptable use policy.
+                                    I agree to the GoGCSE <a href="/terms" target="_blank" className="text-[#003764] underline hover:text-[#007fa3]" onClick={(e) => e.stopPropagation()}>Terms of Service</a>, including the limitation of liability and acceptable use policy.
                                 </div>
                             </div>
                         </label>
@@ -180,13 +180,13 @@ const LegalConsent: React.FC = () => {
                                     type="checkbox"
                                     checked={agreedPrivacy}
                                     onChange={(e) => setAgreedPrivacy(e.target.checked)}
-                                    className="w-5 h-5 text-edexcel-blue rounded focus:ring-edexcel-teal cursor-pointer"
+                                    className="w-5 h-5 text-[#003764] rounded focus:ring-[#007fa3] cursor-pointer"
                                 />
                             </div>
                             <div>
                                 <div className="font-bold text-gray-900">Privacy Policy (Required)</div>
                                 <div className="text-sm text-gray-500 mt-1">
-                                    I have read the <a href="/privacy" target="_blank" className="text-edexcel-blue underline hover:text-edexcel-teal" onClick={(e) => e.stopPropagation()}>Privacy Policy</a> and understand how my data (email, exam answers) is processed.
+                                    I have read the <a href="/privacy" target="_blank" className="text-[#003764] underline hover:text-[#007fa3]" onClick={(e) => e.stopPropagation()}>Privacy Policy</a> and understand how my data (email, exam answers) is processed.
                                 </div>
                             </div>
                         </label>
@@ -198,7 +198,7 @@ const LegalConsent: React.FC = () => {
                                     type="checkbox"
                                     checked={agreedDisclaimer}
                                     onChange={(e) => setAgreedDisclaimer(e.target.checked)}
-                                    className="w-5 h-5 text-edexcel-blue rounded focus:ring-edexcel-teal cursor-pointer"
+                                    className="w-5 h-5 text-[#003764] rounded focus:ring-[#007fa3] cursor-pointer"
                                 />
                             </div>
                             <div>
@@ -215,7 +215,7 @@ const LegalConsent: React.FC = () => {
                                     type="checkbox"
                                     checked={confirmedAge}
                                     onChange={(e) => setConfirmedAge(e.target.checked)}
-                                    className="w-5 h-5 text-edexcel-blue rounded focus:ring-edexcel-teal cursor-pointer"
+                                    className="w-5 h-5 text-[#003764] rounded focus:ring-[#007fa3] cursor-pointer"
                                 />
                             </div>
                             <div>
@@ -233,7 +233,7 @@ const LegalConsent: React.FC = () => {
                                     type="checkbox"
                                     checked={marketingOptIn}
                                     onChange={(e) => setMarketingOptIn(e.target.checked)}
-                                    className="w-5 h-5 text-edexcel-blue rounded focus:ring-edexcel-teal cursor-pointer"
+                                    className="w-5 h-5 text-[#003764] rounded focus:ring-[#007fa3] cursor-pointer"
                                 />
                             </div>
                             <div>
@@ -255,8 +255,8 @@ const LegalConsent: React.FC = () => {
                         onClick={handleAccept}
                         disabled={submitting || !agreedTerms || !agreedPrivacy || !agreedDisclaimer || !confirmedAge}
                         className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${(submitting || !agreedTerms || !agreedPrivacy || !agreedDisclaimer || !confirmedAge)
-                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                : 'bg-edexcel-blue text-white hover:bg-edexcel-teal shadow-lg hover:shadow-xl'
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-[#003764] text-white hover:bg-[#007fa3] shadow-lg hover:shadow-xl'
                             }`}
                     >
                         {submitting ? 'Setting up account...' : 'Accept & Continue to Dashboard'}

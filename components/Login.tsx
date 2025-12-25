@@ -173,7 +173,7 @@ const Login: React.FC = () => {
                                     <select
                                         value={ageGroup}
                                         onChange={(e) => setAgeGroup(e.target.value as AgeGroup)}
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-edexcel-blue focus:ring-2 focus:ring-edexcel-blue/20 outline-none transition-all bg-white text-sm"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#003764] focus:ring-2 focus:ring-[#003764]/20 outline-none transition-all bg-white text-sm"
                                         required
                                     >
                                         <option value="">Select Age</option>
@@ -192,7 +192,7 @@ const Login: React.FC = () => {
                                     <select
                                         value={country}
                                         onChange={(e) => setCountry(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-edexcel-blue focus:ring-2 focus:ring-edexcel-blue/20 outline-none transition-all bg-white text-sm"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#003764] focus:ring-2 focus:ring-[#003764]/20 outline-none transition-all bg-white text-sm"
                                         required
                                     >
                                         <option value="UK">United Kingdom</option>
@@ -219,7 +219,7 @@ const Login: React.FC = () => {
                                     placeholder="Full Name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-edexcel-blue focus:ring-2 focus:ring-edexcel-blue/20 outline-none transition-all text-sm"
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#003764] focus:ring-2 focus:ring-[#003764]/20 outline-none transition-all text-sm"
                                     required
                                 />
                             )}
@@ -234,7 +234,7 @@ const Login: React.FC = () => {
                                 placeholder="Email address"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-edexcel-blue focus:ring-2 focus:ring-edexcel-blue/20 outline-none transition-all text-sm"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#003764] focus:ring-2 focus:ring-[#003764]/20 outline-none transition-all text-sm"
                                 required
                             />
                             <input
@@ -242,7 +242,7 @@ const Login: React.FC = () => {
                                 placeholder="Password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-edexcel-blue focus:ring-2 focus:ring-edexcel-blue/20 outline-none transition-all text-sm"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#003764] focus:ring-2 focus:ring-[#003764]/20 outline-none transition-all text-sm"
                                 required
                             />
                         </>
@@ -259,13 +259,13 @@ const Login: React.FC = () => {
                                     type="checkbox"
                                     checked={termsAccepted}
                                     onChange={(e) => setTermsAccepted(e.target.checked)}
-                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-edexcel-blue focus:ring-edexcel-blue"
+                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-[#003764] focus:ring-[#003764]"
                                 />
                                 <span className="text-xs sm:text-sm text-gray-600 group-hover:text-gray-900 leading-snug">
                                     I agree to the{' '}
-                                    <Link to="/terms" target="_blank" className="text-edexcel-blue font-medium hover:underline">Terms</Link>
+                                    <Link to="/terms" target="_blank" className="text-[#003764] font-medium hover:underline">Terms</Link>
                                     {' '}and{' '}
-                                    <Link to="/privacy" target="_blank" className="text-edexcel-blue font-medium hover:underline">Privacy Policy</Link>.
+                                    <Link to="/privacy" target="_blank" className="text-[#003764] font-medium hover:underline">Privacy Policy</Link>.
                                     <span className="text-red-500">*</span>
                                 </span>
                             </label>
@@ -276,7 +276,7 @@ const Login: React.FC = () => {
                                     type="checkbox"
                                     checked={disclaimerAccepted}
                                     onChange={(e) => setDisclaimerAccepted(e.target.checked)}
-                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-edexcel-blue focus:ring-edexcel-blue"
+                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-[#003764] focus:ring-[#003764]"
                                 />
                                 <span className="text-xs sm:text-sm text-gray-600 group-hover:text-gray-900 leading-snug">
                                     I understand GoGCSE is for <strong>practice only</strong> and does not provide official grades or qualifications.
@@ -305,7 +305,7 @@ const Login: React.FC = () => {
                                         type="checkbox"
                                         checked={parentalConfirmed}
                                         onChange={(e) => setParentalConfirmed(e.target.checked)}
-                                        className="mt-1 w-4 h-4 rounded border-gray-300 text-edexcel-blue focus:ring-edexcel-blue"
+                                        className="mt-1 w-4 h-4 rounded border-gray-300 text-[#003764] focus:ring-[#003764]"
                                     />
                                     <span className="text-xs sm:text-sm text-blue-800 font-medium leading-snug">
                                         My parent/guardian knows I am using this site and has given permission.
@@ -340,7 +340,7 @@ const Login: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={isLoading || (isRegistering && !canRegister())}
-                                className="w-full py-3 px-4 bg-edexcel-blue hover:bg-edexcel-blue/90 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl transition-all font-bold flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+                                className="w-full py-3 px-4 bg-[#003764] hover:bg-[#003764]/90 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl transition-all font-bold flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
                             >
                                 {isLoading ? (
                                     <span className="animate-pulse">Processing...</span>
@@ -390,7 +390,7 @@ const Login: React.FC = () => {
                             setDisclaimerAccepted(false);
                             setAiConsentAccepted(false);
                         }}
-                        className="text-edexcel-blue hover:text-edexcel-teal font-bold hover:underline"
+                        className="text-[#003764] hover:text-[#007fa3] font-bold hover:underline"
                     >
                         {isRegistering ? 'Sign In' : 'Sign Up'}
                     </button>
