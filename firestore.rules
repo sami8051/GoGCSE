@@ -183,10 +183,10 @@ service cloud.firestore {
     // ASSIGNMENTS: RLS for Teacher-Student Access
     // =====================================================
     match /assignments/{assignmentId} {
-      // Teachers can create assignments
-      allow create: if isTeacher() && request.resource.data.teacherId == request.auth.uid;
-      // Only assignment creator can update/delete
-      allow update, delete: if isTeacher() && resource.data.teacherId == request.auth.uid;
+      // Teachers can create assignments, admins can create any
+      allow create: if isAdmin() || (isTeacher() && request.resource.data.teacherId == request.auth.uid);
+      // Only assignment creator can update/delete, or admin
+      allow update, delete: if isAdmin() || (isTeacher() && resource.data.teacherId == request.auth.uid);
       // Approved users can read
       allow read: if isApproved();
     }
