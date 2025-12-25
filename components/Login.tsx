@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signInWithGoogle, registerWithEmailAndPassword, logInWithEmailAndPassword, sendVerification, saveUserConsent, checkUserConsent, updateUserConsent } from '../services/firebase';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, UserPlus, AlertTriangle, CheckCircle, ExternalLink, Shield, Info } from 'lucide-react';
 import appLogo from '../assets/logo.png';
+import { getAuth, getRedirectResult } from 'firebase/auth';
 
 type AgeGroup = 'under13' | '13-15' | '16-17' | '18+' | 'parent' | 'teacher';
 
@@ -28,6 +29,31 @@ const Login: React.FC = () => {
     const requiresParentalConfirmation = ageGroup === '13-15';
     const isUnder13 = ageGroup === 'under13';
 
+    // Handle Google Sign-In redirect result on component mount
+    useEffect(() => {
+        const handleRedirectResult = async () => {
+            const auth = getAuth();
+            try {
+                const result = await getRedirectResult(auth);
+                if (result && result.user) {
+                    // Check if user has already consented
+                    const hasConsented = await checkUserConsent(result.user.uid);
+
+                    if (hasConsented) {
+                        navigate('/dashboard');
+                    } else {
+                        navigate('/legal-consent');
+                    }
+                }
+            } catch (error: any) {
+                console.error("Google Sign-In redirect failed:", error);
+                setError(`Failed to sign in with Google. ${error.message || ''}`);
+            }
+        };
+
+        handleRedirectResult();
+    }, [navigate]);
+
     const canRegister = () => {
         if (!ageGroup || isUnder13) return false;
         if (!termsAccepted || !disclaimerAccepted) return false;
@@ -40,21 +66,13 @@ const Login: React.FC = () => {
     const handleGoogleLogin = async () => {
         setIsLoading(true);
         try {
-            const user = await signInWithGoogle();
-
-            // Check if user has already consented
-            const hasConsented = await checkUserConsent(user.uid);
-
-            if (hasConsented) {
-                navigate('/dashboard');
-            } else {
-                // IMPORTANT: Redirect to Legal Consent Gate
-                navigate('/legal-consent');
-            }
+            // This will redirect to Google sign-in page
+            await signInWithGoogle();
+            // User will be redirected away, then back to this page
+            // The redirect result is handled in useEffect
         } catch (error: any) {
             console.error("Google Sign-In Failure:", error);
             setError(`Failed to sign in with Google. ${error.message || ''}`);
-        } finally {
             setIsLoading(false);
         }
     };
