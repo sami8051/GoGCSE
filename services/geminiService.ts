@@ -26,14 +26,17 @@ export class GeminiService {
 
       // In development: Vite proxies /api to localhost:3001
       // In production: Use Firebase Cloud Function URL from env
-      const isProduction = import.meta.env.PROD;
-      const apiBaseUrl = isProduction 
+      // FORCE LOCAL API IF ON LOCALHOST (Fixes 500 error when running locally but build mode thinks it's prod)
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isProduction = import.meta.env.PROD && !isLocalhost;
+
+      const apiBaseUrl = isProduction
         ? (import.meta.env.VITE_CLOUD_FUNCTION_URL || 'https://us-central1-gcse-a7ffe.cloudfunctions.net/api')
         : '/api';
-      
+
       const url = `${apiBaseUrl}/${endpoint}`;
       console.log(`[GeminiService] Calling ${isProduction ? 'PRODUCTION' : 'DEV'} API: ${url}`);
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: headers,
