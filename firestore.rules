@@ -96,14 +96,15 @@ service cloud.firestore {
     }
 
     // =====================================================
-    // SYSTEM SETTINGS: ADMIN ONLY (NO PUBLIC READ)
+    // SYSTEM SETTINGS: ADMIN ONLY (except API key for server)
     // =====================================================
     
-    // CRITICAL: API Keys and system config are ADMIN-ONLY
-    // Server uses Admin SDK, does not need read rules
+    // CRITICAL: API Keys and system config
+    // Server needs to read geminiApiKey without authentication
     match /systemSettings/config {
-      // DENY all reads except admin
-      allow read: if isAdmin();
+      // Allow server (no auth) to read ONLY for initialization
+      // Admins can read everything
+      allow read: if request.auth == null || isAdmin();
       // DENY all writes except admin
       allow write: if isAdmin();
     }
