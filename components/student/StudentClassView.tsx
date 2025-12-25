@@ -173,6 +173,14 @@ const StudentClassView: React.FC = () => {
                                                     <Clock size={14} />
                                                     Added {new Date(assignment.createdAt || Date.now()).toLocaleDateString()}
                                                 </span>
+                                                {assignment.settings?.timeLimitMinutes && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 rounded text-xs font-medium">
+                                                            {assignment.settings.timeLimitMinutes} min limit
+                                                        </span>
+                                                    </>
+                                                )}
                                                 {assignment.settings?.difficulty && (
                                                     <>
                                                         <span>•</span>

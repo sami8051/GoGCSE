@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../../services/firebase';
 import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
 import { Assignment, Question, StudentAnswer } from '../../types';
-import { Clock, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, ArrowLeft, Timer } from 'lucide-react';
 
 const AssignmentRunner: React.FC = () => {
     const { assignmentId } = useParams<{ assignmentId: string }>();
@@ -13,10 +13,44 @@ const AssignmentRunner: React.FC = () => {
     const [answers, setAnswers] = useState<Record<string, StudentAnswer>>({});
     const [submitting, setSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+    const [startTime, setStartTime] = useState<number>(Date.now());
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         loadAssignment();
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
     }, [assignmentId]);
+
+    useEffect(() => {
+        if (assignment?.settings?.timeLimitMinutes) {
+            const totalSeconds = assignment.settings.timeLimitMinutes * 60;
+            setTimeRemaining(totalSeconds);
+            setStartTime(Date.now());
+
+            timerRef.current = setInterval(() => {
+                setTimeRemaining(prev => {
+                    if (prev === null || prev <= 0) {
+                        if (timerRef.current) clearInterval(timerRef.current);
+                        // Auto-submit when time runs out
+                        handleSubmit(true);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+
+            return () => {
+                if (timerRef.current) {
+                    clearInterval(timerRef.current);
+                }
+            };
+        }
+    }, [assignment]);
 
     const loadAssignment = async () => {
         if (!assignmentId) return;
@@ -47,17 +81,41 @@ const AssignmentRunner: React.FC = () => {
         }));
     };
 
-    const handleSubmit = async () => {
-        if (!window.confirm("Submit assignment? You cannot change your answers after submitting.") || !auth.currentUser || !assignment) return;
+    const formatTime = (seconds: number) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const getTimerColor = () => {
+        if (timeRemaining === null) return 'text-slate-600';
+        const totalTime = (assignment?.settings?.timeLimitMinutes || 0) * 60;
+        const percentage = (timeRemaining / totalTime) * 100;
+        
+        if (percentage > 50) return 'text-green-600';
+        if (percentage > 25) return 'text-amber-600';
+        return 'text-red-600';
+    };
+
+    const handleSubmit = async (autoSubmit = false) => {
+        if (!autoSubmit && !window.confirm("Submit assignment? You cannot change your answers after submitting.")) return;
+        if (!auth.currentUser || !assignment) return;
+        
+        // Clear timer
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+        }
+        
         setSubmitting(true);
 
         try {
             // Transform answers record to array for storage
             const answersArray = Object.values(answers);
-
-            // Calculate basic score? No, AI marking happens asynchronously or on-demand.
-            // For Phase 1, we just save the submission. 
-            // In a real app, we might trigger a Cloud Function or call the Marking API here.
 
             await addDoc(collection(db, 'assignment_results'), {
                 assignmentId: assignment.id,
@@ -68,10 +126,15 @@ const AssignmentRunner: React.FC = () => {
                 maxScore: assignment.questions.reduce((sum, q) => sum + q.marks, 0),
                 answers: answersArray,
                 completedAt: Date.now(),
-                feedback: "Pending AI Marking..."
+                feedback: "Pending AI Marking...",
+                timeSpent: Math.floor((Date.now() - startTime) / 1000) // Time in seconds
             });
 
-            alert("Assignment submitted! Your teacher will review the results.");
+            if (autoSubmit) {
+                alert("Time's up! Your assignment has been automatically submitted.");
+            } else {
+                alert("Assignment submitted! Your teacher will review the results.");
+            }
             navigate('/student/classroom');
 
         } catch (error) {
@@ -98,11 +161,23 @@ const AssignmentRunner: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
-                    {/* Timer could go here */}
+                    {/* Timer */}
+                    {timeRemaining !== null && (
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${
+                            timeRemaining <= 300 ? 'border-red-500 bg-red-50' :
+                            timeRemaining <= 600 ? 'border-amber-500 bg-amber-50' :
+                            'border-green-500 bg-green-50'
+                        }`}>
+                            <Timer size={20} className={getTimerColor()} />
+                            <span className={`font-mono font-bold text-lg ${getTimerColor()}`}>
+                                {formatTime(timeRemaining)}
+                            </span>
+                        </div>
+                    )}
                     <button
-                        onClick={handleSubmit}
+                        onClick={() => handleSubmit(false)}
                         disabled={submitting}
-                        className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors flex items-center gap-2"
+                        className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {submitting ? 'Submitting...' : <>Submit <CheckCircle size={18} /></>}
                     </button>

@@ -329,7 +329,7 @@ const ClassManager: React.FC = () => {
                         {/* Modal Content */}
                         <div className="p-6">
                             {/* Assignment Info */}
-                            <div className="grid md:grid-cols-3 gap-4 mb-6">
+                            <div className="grid md:grid-cols-4 gap-4 mb-6">
                                 <div className="bg-slate-50 p-4 rounded-xl">
                                     <p className="text-xs text-slate-500 uppercase font-bold mb-1">Difficulty</p>
                                     <p className={`text-lg font-bold ${
@@ -345,6 +345,14 @@ const ClassManager: React.FC = () => {
                                 <div className="bg-slate-50 p-4 rounded-xl">
                                     <p className="text-xs text-slate-500 uppercase font-bold mb-1">Questions</p>
                                     <p className="text-lg font-bold text-slate-900">{viewingAssignment.questions?.length || 0}</p>
+                                </div>
+                                <div className="bg-slate-50 p-4 rounded-xl">
+                                    <p className="text-xs text-slate-500 uppercase font-bold mb-1">Time Limit</p>
+                                    <p className="text-lg font-bold text-slate-900">
+                                        {viewingAssignment.settings?.timeLimitMinutes 
+                                            ? `${viewingAssignment.settings.timeLimitMinutes} min` 
+                                            : 'No limit'}
+                                    </p>
                                 </div>
                             </div>
 

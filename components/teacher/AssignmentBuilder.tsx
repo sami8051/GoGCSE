@@ -14,6 +14,7 @@ const AssignmentBuilder: React.FC = () => {
     const [topic, setTopic] = useState("");
     const [difficulty, setDifficulty] = useState<'Easy' | 'Medium' | 'Hard' | 'Mixed'>("Medium");
     const [numQuestions, setNumQuestions] = useState(5);
+    const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | undefined>(undefined);
     const [customInstructions, setCustomInstructions] = useState("");
 
     // UI State
@@ -53,6 +54,7 @@ const AssignmentBuilder: React.FC = () => {
                 settings: {
                     topic,
                     difficulty,
+                    timeLimitMinutes,
                 },
                 status: 'active',
                 createdAt: Date.now()
@@ -126,6 +128,26 @@ const AssignmentBuilder: React.FC = () => {
                                         <option value={10}>10 Questions</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Time Limit (Optional)</label>
+                                <select
+                                    value={timeLimitMinutes || ''}
+                                    onChange={(e: any) => setTimeLimitMinutes(e.target.value ? Number(e.target.value) : undefined)}
+                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                >
+                                    <option value="">No time limit</option>
+                                    <option value={15}>15 minutes</option>
+                                    <option value={30}>30 minutes</option>
+                                    <option value={45}>45 minutes</option>
+                                    <option value={60}>1 hour</option>
+                                    <option value={90}>1.5 hours</option>
+                                    <option value={120}>2 hours</option>
+                                </select>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Set a time limit for students to complete this assignment. Leave blank for no limit.
+                                </p>
                             </div>
 
                             <div className="pt-4">
