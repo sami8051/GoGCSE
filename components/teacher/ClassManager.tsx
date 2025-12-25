@@ -209,7 +209,7 @@ const ClassManager: React.FC = () => {
                                                 : 'bg-green-50 hover:bg-green-100 text-green-600'
                                         }`}
                                     >
-                                        {assignment.status === 'active' ? 'Archive' : 'Activate'}
+                                        {assignment.status === 'active' ? 'Archived' : 'Published'}
                                     </button>
                                     <button
                                         onClick={() => handleDeleteAssignment(assignment.id)}
@@ -396,7 +396,7 @@ const ClassManager: React.FC = () => {
                                             : 'bg-green-100 text-green-700 hover:bg-green-200'
                                     }`}
                                 >
-                                    {viewingAssignment.status === 'active' ? 'Archive Assignment' : 'Activate Assignment'}
+                                    {viewingAssignment.status === 'active' ? 'Mark as Archived' : 'Mark as Published'}
                                 </button>
                                 <button
                                     onClick={() => handleDeleteAssignment(viewingAssignment.id)}
