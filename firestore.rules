@@ -18,6 +18,15 @@ service cloud.firestore {
       );
     }
 
+    // Helper for teacher check (includes admins)
+    function isTeacher() {
+      return request.auth != null && (
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isTeacher == true)
+      );
+    }
+
     // Helper for approved status check
     function isApproved() {
       return request.auth != null && (
@@ -142,10 +151,10 @@ service cloud.firestore {
     // CLASSROOM RULES: Teacher-Student RLS
     // =====================================================
     match /classes/{classId} {
-      // Only teachers (admins) can create their own classes
-      allow create: if isAdmin() && request.resource.data.teacherId == request.auth.uid;
+      // Teachers (including admins) can create their own classes
+      allow create: if isTeacher() && request.resource.data.teacherId == request.auth.uid;
       // Teachers can update/delete their own classes
-      allow update, delete: if isAdmin() && resource.data.teacherId == request.auth.uid;
+      allow update, delete: if isTeacher() && resource.data.teacherId == request.auth.uid;
       
       // Approved users can read classes they're members of
       allow read: if isApproved() && request.auth != null;
@@ -166,10 +175,10 @@ service cloud.firestore {
     // ASSIGNMENTS: RLS for Teacher-Student Access
     // =====================================================
     match /assignments/{assignmentId} {
-      // Only teachers can create assignments
-      allow create: if isAdmin() && request.resource.data.teacherId == request.auth.uid;
+      // Teachers can create assignments
+      allow create: if isTeacher() && request.resource.data.teacherId == request.auth.uid;
       // Only assignment creator can update/delete
-      allow update, delete: if isAdmin() && resource.data.teacherId == request.auth.uid;
+      allow update, delete: if isTeacher() && resource.data.teacherId == request.auth.uid;
       // Approved users can read
       allow read: if isApproved();
     }

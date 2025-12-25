@@ -113,15 +113,13 @@ const TeacherDashboard: React.FC = () => {
                     <h1 className="text-3xl font-bold text-slate-900">Teacher Dashboard</h1>
                     <p className="text-slate-500 mt-1">Manage your classes and assignments.</p>
                 </div>
-                {isAdmin && (
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-indigo-200"
-                    >
-                        <Plus size={20} />
-                        Create Class
-                    </button>
-                )}
+                <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-indigo-200"
+                >
+                    <Plus size={20} />
+                    Create Class
+                </button>
             </div>
 
             {loading ? (
@@ -135,16 +133,12 @@ const TeacherDashboard: React.FC = () => {
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-2">No classes yet</h3>
                     <p className="text-slate-500 max-w-md mx-auto mb-6">Create your first class to start assigning AI-generated practice exams to your students.</p>
-                    {isAdmin ? (
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="text-indigo-600 font-semibold hover:text-indigo-700 hover:underline"
-                        >
-                            Create a Class now
-                        </button>
-                    ) : (
-                        <p className="text-slate-400 text-sm">Contact your administrator to create a class.</p>
-                    )}
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="text-indigo-600 font-semibold hover:text-indigo-700 hover:underline"
+                    >
+                        Create a Class now
+                    </button>
                 </div>
             ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
