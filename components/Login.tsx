@@ -35,6 +35,7 @@ const Login: React.FC = () => {
             const auth = getAuth();
             try {
                 setIsLoading(true);
+                console.log('Checking for redirect result...');
                 const result = await getRedirectResult(auth);
                 if (result && result.user) {
                     console.log('Google Sign-In successful, user:', result.user.email);
@@ -46,11 +47,21 @@ const Login: React.FC = () => {
                     } else {
                         navigate('/legal-consent');
                     }
+                } else {
+                    console.log('No redirect result found (normal for first load)');
                 }
             } catch (error: any) {
                 console.error("Google Sign-In redirect failed:", error);
-                if (error.code !== 'auth/popup-closed-by-user') {
-                    setError(`Failed to sign in with Google. ${error.message || ''}`);
+                console.error("Error code:", error.code);
+                console.error("Error message:", error.message);
+                
+                // Show user-friendly error messages
+                if (error.code === 'auth/unauthorized-domain') {
+                    setError('Domain not authorized. Please add this domain to Firebase Authentication settings.');
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    setError('Google Sign-In is not enabled. Please enable it in Firebase Console.');
+                } else if (error.code !== 'auth/popup-closed-by-user') {
+                    setError(`Failed to sign in with Google: ${error.message || 'Unknown error'}`);
                 }
             } finally {
                 setIsLoading(false);
