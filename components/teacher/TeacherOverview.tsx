@@ -32,6 +32,8 @@ const TeacherOverview: React.FC = () => {
         setLoading(true);
         
         try {
+            console.log('Loading analytics for teacher:', auth.currentUser.uid);
+            
             // 1. Load all teacher's classes
             const classesQuery = query(
                 collection(db, 'classes'),
@@ -43,15 +45,19 @@ const TeacherOverview: React.FC = () => {
                 ...doc.data()
             } as Classroom));
 
+            console.log('Found classes:', classes.length);
             setTotalClasses(classes.length);
 
             // 2. For each class, get members and assignments
             const analyticsPromises = classes.map(async (classroom) => {
+                console.log('Loading analytics for class:', classroom.name);
+                
                 // Get members count
                 const membersSnapshot = await getDocs(
                     collection(db, 'classes', classroom.id, 'members')
                 );
                 const studentCount = membersSnapshot.size;
+                console.log(`  - Students: ${studentCount}`);
 
                 // Get assignments for this class
                 const assignmentsQuery = query(
@@ -60,6 +66,7 @@ const TeacherOverview: React.FC = () => {
                 );
                 const assignmentsSnapshot = await getDocs(assignmentsQuery);
                 const assignmentCount = assignmentsSnapshot.size;
+                console.log(`  - Assignments: ${assignmentCount}`);
 
                 // Get assignment results to calculate completion rate and average score
                 const assignments = assignmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Assignment));
@@ -92,6 +99,8 @@ const TeacherOverview: React.FC = () => {
                     ? (totalScore / totalMaxScore) * 100 
                     : 0;
 
+                console.log(`  - Completion Rate: ${completionRate}%, Avg Score: ${averageScore}%`);
+
                 return {
                     classroom,
                     studentCount,
@@ -102,6 +111,7 @@ const TeacherOverview: React.FC = () => {
             });
 
             const analytics = await Promise.all(analyticsPromises);
+            console.log('Analytics loaded:', analytics.length, 'classes');
             setClassAnalytics(analytics);
 
             // Calculate totals
@@ -112,6 +122,7 @@ const TeacherOverview: React.FC = () => {
 
         } catch (error) {
             console.error('Error loading analytics:', error);
+            alert('Failed to load analytics. Check console for details.');
         }
         
         setLoading(false);
