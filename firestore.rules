@@ -164,17 +164,17 @@ service cloud.firestore {
       // Teachers can update/delete their own classes
       allow update, delete: if isTeacher() && resource.data.teacherId == request.auth.uid;
       
-      // Approved users can read classes they're members of
-      allow read: if isApproved() && request.auth != null;
+      // ANY authenticated user can read classes (unapproved users can join classrooms)
+      allow read: if request.auth != null;
       
       // Members subcollection
       match /members/{memberId} {
         allow read: if request.auth != null;
-        // RLS: User can only add themselves if approved
-        allow create: if request.auth != null && request.auth.uid == memberId && isApproved(); 
+        // RLS: ANY authenticated user can add themselves (unapproved users can join)
+        allow create: if request.auth != null && request.auth.uid == memberId; 
         // Only class owner or admin can remove members
         allow delete: if isAdmin() || 
-          (isApproved() && exists(/databases/$(database)/documents/classes/$(classId)) &&
+          (request.auth != null && exists(/databases/$(database)/documents/classes/$(classId)) &&
            get(/databases/$(database)/documents/classes/$(classId)).data.teacherId == request.auth.uid);
       }
     }
@@ -187,15 +187,15 @@ service cloud.firestore {
       allow create: if isAdmin() || (isTeacher() && request.resource.data.teacherId == request.auth.uid);
       // Only assignment creator can update/delete, or admin
       allow update, delete: if isAdmin() || (isTeacher() && resource.data.teacherId == request.auth.uid);
-      // Approved users can read
-      allow read: if isApproved();
+      // ANY authenticated user can read assignments (unapproved users can view assignments)
+      allow read: if request.auth != null;
     }
 
     // === ASSIGNMENT RESULTS: RLS for Student/Teacher Access ===
     match /assignment_results/{resultId} {
-      // Student can create their own results
-      allow create: if request.auth != null && request.resource.data.studentId == request.auth.uid && isApproved();
-      // Student can read their own, teacher can read student results
+      // ANY authenticated student can create their own results (unapproved users can submit assignments)
+      allow create: if request.auth != null && request.resource.data.studentId == request.auth.uid;
+      // Student can read their own, teacher/admin can read all
       allow read: if request.auth != null && (
         resource.data.studentId == request.auth.uid ||
         isAdmin()
