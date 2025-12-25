@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { auth, getUserHistory, logOut, deleteExamResult, db, ADMIN_EMAILS } from '../services/firebase';
+import { auth, getUserHistory, logOut, deleteExamResult, db, ADMIN_EMAILS, checkIsTeacher } from '../services/firebase';
 import { collection, getDocs, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { User } from 'firebase/auth';
@@ -27,9 +27,19 @@ const Dashboard: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
             setUser(user);
             if (user) {
+                // Check if user is a teacher (but not admin)
+                const isTeacher = await checkIsTeacher(user.uid);
+                const isAdmin = user.email && ADMIN_EMAILS.includes(user.email);
+                
+                // Redirect teachers (who are not admins) to teacher dashboard
+                if (isTeacher && !isAdmin) {
+                    navigate('/teacher');
+                    return;
+                }
+                
                 fetchHistory(user.uid);
                 fetchAnnouncements();
             } else {
@@ -38,7 +48,7 @@ const Dashboard: React.FC = () => {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [navigate]);
 
     const fetchHistory = async (uid: string) => {
         const data = await getUserHistory(uid);

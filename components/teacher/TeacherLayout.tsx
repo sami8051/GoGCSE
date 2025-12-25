@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, ChevronLeft, ChevronRight, Moon, Sun, Home, LogOut, Users } from 'lucide-react';
+import { LayoutDashboard, BookOpen, ChevronLeft, ChevronRight, Moon, Sun, LogOut, Users, BarChart3, FileText, Home } from 'lucide-react';
 import { auth, logOut, checkIsAdmin } from '../../services/firebase';
 
 const TeacherLayout: React.FC = () => {
@@ -56,13 +56,14 @@ const TeacherLayout: React.FC = () => {
         } ${collapsed ? 'justify-center' : ''}`;
 
     const navItems = [
-        { to: '/teacher', icon: LayoutDashboard, label: 'Overview', end: true },
+        { to: '/teacher', icon: LayoutDashboard, label: 'Dashboard', end: true },
         { to: '/teacher/classes', icon: BookOpen, label: 'My Classes' },
         { to: '/teacher/students', icon: Users, label: 'Student Directory' },
     ];
 
+    // Only add admin link if user is admin (not just teacher)
     if (isAdmin) {
-        navItems.push({ to: '/admin', icon: Home, label: 'Back to Admin' });
+        navItems.push({ to: '/admin', icon: Home, label: 'Admin Panel', end: false });
     }
 
     return (
@@ -133,22 +134,26 @@ const TeacherLayout: React.FC = () => {
                 <header className={`${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} border-b h-16 flex items-center justify-between px-6 shadow-sm`}>
                     {/* Breadcrumbs */}
                     <div className="flex items-center gap-2">
-                        <button onClick={() => navigate('/')} className={`p-2 rounded-lg hover:bg-slate-100 ${darkMode ? 'hover:bg-slate-700' : ''}`} title="Back to App">
-                            <Home size={18} className={darkMode ? 'text-slate-400' : 'text-slate-500'} />
-                        </button>
                         <nav className="flex items-center gap-1 text-sm">
                             {getBreadcrumbs().map((crumb, idx, arr) => (
                                 <React.Fragment key={crumb.path}>
                                     <button
                                         onClick={() => navigate(crumb.path)}
-                                        className={`${idx === arr.length - 1
-                                            ? (darkMode ? 'text-white font-semibold' : 'text-slate-900 font-semibold')
-                                            : (darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900')
-                                            }`}
+                                        className={`${
+                                            idx === arr.length - 1
+                                                ? darkMode
+                                                    ? 'text-white font-semibold'
+                                                    : 'text-slate-900 font-semibold'
+                                                : darkMode
+                                                ? 'text-slate-400 hover:text-white'
+                                                : 'text-slate-500 hover:text-slate-900'
+                                        }`}
                                     >
                                         {crumb.label}
                                     </button>
-                                    {idx < arr.length - 1 && <span className={darkMode ? 'text-slate-600' : 'text-slate-300'}>/</span>}
+                                    {idx < arr.length - 1 && (
+                                        <span className={darkMode ? 'text-slate-600' : 'text-slate-300'}>/</span>
+                                    )}
                                 </React.Fragment>
                             ))}
                         </nav>

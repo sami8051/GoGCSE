@@ -3,15 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { BookOpen, FileText, PlayCircle, PenTool, Sparkles, LayoutDashboard, ArrowRight, Zap, Target, Award, ChevronDown } from 'lucide-react';
 import { PaperType } from '../types';
 import { GeminiService } from '../services/geminiService';
-import { auth, syncUserProfile, db } from '../services/firebase';
+import { auth, syncUserProfile, db, checkIsTeacher, ADMIN_EMAILS } from '../services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import appLogo from '../assets/logo.png';
 import SEOHead from './SEOHead';
-
-
-
-import { ADMIN_EMAILS } from '../services/firebase';
 
 interface FeatureFlags {
     paper1Enabled: boolean;
@@ -41,11 +37,20 @@ const Landing: React.FC = () => {
                 syncUserProfile(currentUser);
 
                 try {
+                    // Check if user is admin first
                     if (ADMIN_EMAILS.includes(currentUser.email || '')) {
                         setIsApproved(true);
                         return;
                     }
 
+                    // Check if user is a teacher (redirect to teacher dashboard)
+                    const isTeacher = await checkIsTeacher(currentUser.uid);
+                    if (isTeacher) {
+                        navigate('/teacher');
+                        return;
+                    }
+
+                    // Regular student/user approval check
                     const docRef = doc(db, 'users', currentUser.uid);
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists() && docSnap.data().isApproved) {
@@ -62,7 +67,7 @@ const Landing: React.FC = () => {
             }
         });
         return () => unsubscribe();
-    }, []);
+    }, [navigate]);
 
     useEffect(() => {
         const loadFeatureFlags = async () => {
