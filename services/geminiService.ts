@@ -27,7 +27,10 @@ export class GeminiService {
       // In development: Vite proxies /api to localhost:3001
       // In production: Use Firebase Cloud Function URL from env
       // FORCE LOCAL API IF ON LOCALHOST (Fixes 500 error when running locally but build mode thinks it's prod)
+      // FORCE LOCAL API IF ON LOCALHOST (Fixes 500 error when running locally but build mode thinks it's prod)
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      console.log(`[GeminiService Mode Check] Hostname: ${window.location.hostname}, isLocalhost: ${isLocalhost}, ImportMetaProd: ${import.meta.env.PROD}`);
+
       const isProduction = import.meta.env.PROD && !isLocalhost;
 
       const apiBaseUrl = isProduction
