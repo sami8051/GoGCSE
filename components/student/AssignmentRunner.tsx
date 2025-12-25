@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../../services/firebase';
-import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, updateDoc } from 'firebase/firestore';
 import { Assignment, Question, StudentAnswer } from '../../types';
 import { Clock, CheckCircle, AlertCircle, ArrowLeft, Timer } from 'lucide-react';
+import { GeminiService } from '../../services/geminiService';
 
 const AssignmentRunner: React.FC = () => {
     const { assignmentId } = useParams<{ assignmentId: string }>();
@@ -116,25 +117,64 @@ const AssignmentRunner: React.FC = () => {
         try {
             // Transform answers record to array for storage
             const answersArray = Object.values(answers);
+            const studentAnswersText = assignment.questions.map(q => 
+                answers[q.id || q.number]?.text || ''
+            );
 
-            await addDoc(collection(db, 'assignment_results'), {
+            // Save initial result
+            const resultRef = await addDoc(collection(db, 'assignment_results'), {
                 assignmentId: assignment.id,
                 classId: assignment.classId,
                 studentId: auth.currentUser.uid,
                 studentName: auth.currentUser.displayName || 'Student',
-                score: 0, // Pending marking
+                score: 0, // Will be updated after marking
                 maxScore: assignment.questions.reduce((sum, q) => sum + q.marks, 0),
                 answers: answersArray,
                 completedAt: Date.now(),
-                feedback: "Pending AI Marking...",
-                timeSpent: Math.floor((Date.now() - startTime) / 1000) // Time in seconds
+                feedback: "AI is marking your assignment...",
+                timeSpent: Math.floor((Date.now() - startTime) / 1000),
+                markingStatus: 'pending'
             });
 
-            if (autoSubmit) {
-                alert("Time's up! Your assignment has been automatically submitted.");
-            } else {
-                alert("Assignment submitted! Your teacher will review the results.");
+            // Auto-mark the assignment using AI
+            try {
+                const gemini = new GeminiService();
+                const markingResult = await gemini.markAssignment(assignment.id!, studentAnswersText);
+
+                // Update result with marking data
+                await updateDoc(doc(db, 'assignment_results', resultRef.id), {
+                    score: markingResult.totalMarks,
+                    percentage: markingResult.percentage,
+                    feedback: markingResult.overallFeedback,
+                    detailedResults: markingResult.results,
+                    markingStatus: 'complete',
+                    markedAt: Date.now()
+                });
+
+                if (autoSubmit) {
+                    alert(`Time's up! Your assignment has been auto-marked.\n\nScore: ${markingResult.totalMarks}/${markingResult.totalPossible} (${Math.round(markingResult.percentage)}%)`);
+                } else {
+                    alert(`Assignment submitted and marked!
+
+Score: ${markingResult.totalMarks}/${markingResult.totalPossible} (${Math.round(markingResult.percentage)}%)
+
+Check your results for detailed feedback.`);
+                }
+            } catch (markingError) {
+                console.error("Auto-marking failed:", markingError);
+                // Update with error status
+                await updateDoc(doc(db, 'assignment_results', resultRef.id), {
+                    feedback: "Auto-marking failed. Teacher will review manually.",
+                    markingStatus: 'failed'
+                });
+                
+                if (autoSubmit) {
+                    alert("Time's up! Your assignment has been submitted (marking pending).");
+                } else {
+                    alert("Assignment submitted! Auto-marking failed, your teacher will review it.");
+                }
             }
+
             navigate('/student/classroom');
 
         } catch (error) {

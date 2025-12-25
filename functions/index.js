@@ -623,5 +623,89 @@ app.post('/generate-practice-set', async (req, res) => {
     }
 });
 
+// Auto-Mark Assignment using Answer Keys
+app.post('/mark-assignment', async (req, res) => {
+    try {
+        const { assignmentId, studentAnswers } = req.body;
+        console.log(`Auto-marking assignment: ${assignmentId}`);
+
+        // Fetch assignment from Firestore to get answer keys
+        const assignmentDoc = await admin.firestore().collection('assignments').doc(assignmentId).get();
+        
+        if (!assignmentDoc.exists) {
+            return res.status(404).json({ error: 'Assignment not found' });
+        }
+
+        const assignment = assignmentDoc.data();
+        const questions = assignment.questions || [];
+
+        const ai = await initializeAI();
+
+        // Prepare marking prompt for AI
+        const markingPrompt = `
+You are an expert GCSE English Language examiner. Mark the following student answers using the provided answer keys and marking criteria.
+
+${EDEXCEL_MARKING_GRIDS}
+
+IMPORTANT:
+- Use the answer key as the PRIMARY guide for marking
+- Award marks based on accuracy, analysis, and quality of response
+- Provide constructive feedback for each answer
+- Be fair but rigorous in your assessment
+
+${questions.map((q, i) => `
+Question ${q.number} (${q.marks} marks):
+${q.text}
+
+Answer Key / Marking Criteria:
+${q.answerKey || 'No answer key provided - mark based on GCSE standards'}
+
+Student Answer:
+${studentAnswers[i] || '[No answer provided]'}
+`).join('\n---\n')}
+
+Output JSON format:
+{
+  "results": [
+    {
+      "questionNumber": "1",
+      "marksAwarded": number,
+      "maxMarks": number,
+      "feedback": "Detailed feedback explaining the marks",
+      "strengths": "What the student did well",
+      "improvements": "Areas for improvement"
+    }
+  ],
+  "totalMarks": number,
+  "totalPossible": number,
+  "percentage": number,
+  "overallFeedback": "Summary of performance"
+}
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.0-flash-exp',
+            contents: markingPrompt,
+            config: {
+                responseMimeType: 'application/json',
+            }
+        });
+
+        const text = response.text || (typeof response.text === 'function' ? response.text() : JSON.stringify(response)) || "{}";
+        const markingData = JSON.parse(cleanJson(text));
+
+        // Validate response
+        if (!markingData.results || !Array.isArray(markingData.results)) {
+            throw new Error("Invalid response format: missing results array");
+        }
+
+        res.json(markingData);
+
+    } catch (error) {
+        console.error("Auto-marking failed:", error);
+        res.status(500).json({ error: "Failed to mark assignment", details: error.message });
+    }
+});
+
 // export 
 exports.api = onRequest({ cors: true, timeoutSeconds: 300 }, app);

@@ -85,4 +85,8 @@ export class GeminiService {
   async generatePracticeSet(topic: string, difficulty: string, numQuestions: number): Promise<any> {
     return this.post('generate-practice-set', { topic, difficulty, numQuestions });
   }
+
+  async markAssignment(assignmentId: string, studentAnswers: string[]): Promise<any> {
+    return this.post('mark-assignment', { assignmentId, studentAnswers });
+  }
 }
