@@ -5,24 +5,42 @@ const express = require('express');
 const cors = require('cors');
 const { GoogleGenAI } = require('@google/genai');
 
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin (uses default credentials in Cloud Functions)
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
+
 // Define the API key as a parameter (will be set during deployment)
 const geminiApiKey = defineString('GEMINI_API_KEY');
 
-const app = express();
+// Initialize Gemini - async to allow Firestore fetch
+const initializeAI = async () => {
+    let key = geminiApiKey.value() || process.env.GEMINI_API_KEY;
 
-// Middleware
-app.use(cors({ origin: true }));
-app.use(express.json({ limit: '10mb' }));
+    if (!key) {
+        console.log("Environment key missing, checking Firestore systemSettings/config...");
+        try {
+            const doc = await admin.firestore().collection('systemSettings').doc('config').get();
+            if (doc.exists && doc.data().geminiApiKey) {
+                key = doc.data().geminiApiKey;
+                console.log("✅ Gemini API key loaded from Firestore via Admin SDK.");
+            } else {
+                console.warn("⚠️ Firestore config missing or empty.");
+            }
+        } catch (error) {
+            console.error("❌ Failed to fetch key from Firestore:", error);
+        }
+    }
 
-// Initialize Gemini - will use the parameter value
-const initializeAI = () => {
-  const key = geminiApiKey.value() || process.env.GEMINI_API_KEY;
-  if (!key) {
-    console.warn("WARNING: GEMINI_API_KEY is not set");
-    return new GoogleGenAI({ apiKey: '' });
-  }
-  console.log("Gemini API key loaded (length:", key.length, ")");
-  return new GoogleGenAI({ apiKey: key });
+    if (!key) {
+        console.warn("WARNING: GEMINI_API_KEY is not set anywhere.");
+        return new GoogleGenAI({ apiKey: '' });
+    }
+
+    console.log("Gemini API key loaded (length:", key.length, ")");
+    return new GoogleGenAI({ apiKey: key });
 };
 
 // ------------------------------------------------------------------
@@ -105,7 +123,7 @@ app.post('/generate-exam', async (req, res) => {
         const { type, imageSize = '1K' } = req.body;
         console.log(`Generating ${type} exam...`);
 
-        const ai = initializeAI();
+        const ai = await initializeAI();
         const isPaper1 = type === 'PAPER_1'; // Assuming enum value matches string
 
         // [System Instruction from services/geminiService.ts]
@@ -254,6 +272,8 @@ app.post('/mark-exam', async (req, res) => {
     try {
         const { paper, answers } = req.body;
         console.log("Marking exam...");
+
+        const ai = await initializeAI();
 
         const answersList = paper.questions.map(q => {
             const ans = answers[q.id];
@@ -415,6 +435,7 @@ app.post('/mark-exam', async (req, res) => {
 app.post('/model-answers', async (req, res) => {
     try {
         const { paper } = req.body;
+        const ai = await initializeAI();
         const sourceA = paper.sources?.[0]?.content || "";
         const sourceB = paper.sources?.[1]?.content || "";
 
@@ -450,6 +471,7 @@ app.post('/model-answers', async (req, res) => {
 app.post('/analyze-text', async (req, res) => {
     try {
         const { text } = req.body;
+        const ai = await initializeAI();
         const prompt = `
             Analyze the following text for language methods and structural features used by the writer.
             Focus on techniques relevant to GCSE English Language (e.g., metaphor, simile, personification, alliteration, pathetic fallacy, sentence structure, etc.).
@@ -486,6 +508,7 @@ app.post('/analyze-text', async (req, res) => {
 app.post('/evaluate-writing', async (req, res) => {
     try {
         const { text, targetMethod } = req.body;
+        const ai = await initializeAI();
         const prompt = `
             Evaluate the following student writing. The student was asked to use the language method: "${targetMethod}".
             
