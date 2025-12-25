@@ -65,15 +65,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         return <Navigate to="/login" replace />;
     }
 
-    // Consent Check: Must accept legal terms first
+    // Approval Override: If approved, allow access immediately (bypassing consent check)
+    if (isApproved) {
+        return <>{children}</>;
+    }
+
+    // Consent Check: If not approved yet, ensure they have signed terms
     if (!hasConsented) {
         return <Navigate to="/legal-consent" replace />;
     }
 
-    // Approval Check: If consent passed, check approval
-    if (!isApproved) {
-        return <Navigate to="/pending-approval" replace />;
-    }
+    // If consented but not approved:
+    return <Navigate to="/pending-approval" replace />;
 
     return <>{children}</>;
 };
