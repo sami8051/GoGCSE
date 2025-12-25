@@ -258,6 +258,7 @@ const LegalConsent: React.FC = () => {
                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                             : 'bg-[#003764] text-white hover:bg-[#007fa3] shadow-lg hover:shadow-xl'
                             }`}
+                        style={{ backgroundColor: submitting || !agreedTerms || !agreedPrivacy || !agreedDisclaimer || !confirmedAge ? undefined : '#003764' }}
                     >
                         {submitting ? 'Setting up account...' : 'Accept & Continue to Dashboard'}
                     </button>

@@ -290,7 +290,7 @@ const Login: React.FC = () => {
                                     type="checkbox"
                                     checked={aiConsentAccepted}
                                     onChange={(e) => setAiConsentAccepted(e.target.checked)}
-                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-edexcel-blue focus:ring-edexcel-blue"
+                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-[#003764] focus:ring-[#003764]"
                                 />
                                 <span className="text-xs sm:text-sm text-amber-900 group-hover:text-amber-950 leading-snug font-medium">
                                     I agree that AI-generated content may occasionally contain errors. I will verify important information with official textbooks or my teacher.
@@ -320,7 +320,7 @@ const Login: React.FC = () => {
                                     type="checkbox"
                                     checked={marketingOptIn}
                                     onChange={(e) => setMarketingOptIn(e.target.checked)}
-                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-edexcel-blue focus:ring-edexcel-blue"
+                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-[#003764] focus:ring-[#003764]"
                                 />
                                 <span className="text-xs text-gray-500 group-hover:text-gray-700 leading-snug">
                                     (Optional) Send me study tips and updates.
@@ -340,7 +340,12 @@ const Login: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={isLoading || (isRegistering && !canRegister())}
-                                className="w-full py-3 px-4 bg-[#003764] hover:bg-[#003764]/90 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white rounded-xl transition-all font-bold flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+                                className="w-full py-3 px-4 rounded-xl transition-all font-bold flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+                                style={{ 
+                                    backgroundColor: isLoading || (isRegistering && !canRegister()) ? '#e5e7eb' : '#003764',
+                                    color: isLoading || (isRegistering && !canRegister()) ? '#9ca3af' : '#ffffff',
+                                    cursor: isLoading || (isRegistering && !canRegister()) ? 'not-allowed' : 'pointer'
+                                }}
                             >
                                 {isLoading ? (
                                     <span className="animate-pulse">Processing...</span>
