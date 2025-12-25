@@ -50,16 +50,21 @@ const AssignmentBuilder: React.FC = () => {
         }
         setIsSaving(true);
         try {
+            // Build settings object, only include timeLimitMinutes if it's defined
+            const settings: any = {
+                topic,
+                difficulty,
+            };
+            if (timeLimitMinutes !== undefined && timeLimitMinutes !== null) {
+                settings.timeLimitMinutes = timeLimitMinutes;
+            }
+
             const newAssignment: Partial<Assignment> = {
                 classId,
                 teacherId: auth.currentUser.uid,
                 title: generatedExam.title,
                 questions: generatedExam.questions,
-                settings: {
-                    topic,
-                    difficulty,
-                    timeLimitMinutes,
-                },
+                settings,
                 status: 'active',
                 createdAt: Date.now()
             };
