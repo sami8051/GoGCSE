@@ -15,6 +15,12 @@ if (!admin.apps.length) {
 // Define the API key as a parameter (will be set during deployment)
 const geminiApiKey = defineString('GEMINI_API_KEY');
 
+const app = express();
+
+// Middleware
+app.use(cors({ origin: true }));
+app.use(express.json({ limit: '10mb' }));
+
 // Initialize Gemini - async to allow Firestore fetch
 const initializeAI = async () => {
     let key = geminiApiKey.value() || process.env.GEMINI_API_KEY;
@@ -226,7 +232,7 @@ app.post('/generate-exam', async (req, res) => {
             }
         });
 
-        const text = response.text() || "{}";
+        const text = response.text || (typeof response.text === 'function' ? response.text() : JSON.stringify(response)) || "{}";
         const data = JSON.parse(cleanJson(text));
 
         // Post-process for images
@@ -373,7 +379,7 @@ app.post('/mark-exam', async (req, res) => {
             }
         });
 
-        const text = response.text() || "{}";
+        const text = response.text || (typeof response.text === 'function' ? response.text() : JSON.stringify(response)) || "{}";
         const cleanText = cleanJson(text);
         const data = JSON.parse(cleanText);
 
@@ -460,7 +466,8 @@ app.post('/model-answers', async (req, res) => {
             contents: prompt,
         });
 
-        res.json({ text: response.text() || "Model answers unavailable." });
+        const textResult = response.text || (typeof response.text === 'function' ? response.text() : "") || "Model answers unavailable.";
+        res.json({ text: textResult });
     } catch (error) {
         console.error("Model Answers Failed:", error);
         res.status(500).json({ error: "Failed to generate model answers" });
@@ -497,7 +504,8 @@ app.post('/analyze-text', async (req, res) => {
             config: { responseMimeType: 'application/json' }
         });
 
-        res.json(JSON.parse(cleanJson(response.text() || "{}")));
+        const textResult = response.text || (typeof response.text === 'function' ? response.text() : "{}") || "{}";
+        res.json(JSON.parse(cleanJson(textResult)));
     } catch (error) {
         console.error("Analysis Failed:", error);
         res.status(500).json({ error: "Failed to analyze text" });
@@ -528,7 +536,8 @@ app.post('/evaluate-writing', async (req, res) => {
             config: { responseMimeType: 'application/json' }
         });
 
-        res.json(JSON.parse(cleanJson(response.text() || "{}")));
+        const textResult = response.text || (typeof response.text === 'function' ? response.text() : "{}") || "{}";
+        res.json(JSON.parse(cleanJson(textResult)));
     } catch (error) {
         console.error("Evaluation Failed:", error);
         res.status(500).json({ error: "Failed to evaluate writing" });
