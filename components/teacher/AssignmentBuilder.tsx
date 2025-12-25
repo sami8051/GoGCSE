@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../../services/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { GeminiService } from '../../services/geminiService';
-import { ArrowLeft, Sparkles, Save, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Sparkles, Save, RefreshCw, Edit2, Check, X } from 'lucide-react';
 import { Assignment } from '../../types';
 
 const AssignmentBuilder: React.FC = () => {
@@ -19,8 +19,10 @@ const AssignmentBuilder: React.FC = () => {
 
     // UI State
     const [isGenerating, setIsGenerating] = useState(false);
-    const [generatedExam, setGeneratedExam] = useState<any>(null); // Using 'any' briefly to match Gemini output structure
+    const [generatedExam, setGeneratedExam] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [editingAnswerIndex, setEditingAnswerIndex] = useState<number | null>(null);
+    const [tempAnswerKey, setTempAnswerKey] = useState("");
 
     const handleGenerate = async () => {
         if (!topic) return;
@@ -40,6 +42,25 @@ const AssignmentBuilder: React.FC = () => {
             alert("Failed to generate questions. Please try again.");
         }
         setIsGenerating(false);
+    };
+
+    const handleEditAnswerKey = (index: number, currentKey: string) => {
+        setEditingAnswerIndex(index);
+        setTempAnswerKey(currentKey || '');
+    };
+
+    const handleSaveAnswerKey = (index: number) => {
+        if (!generatedExam) return;
+        const updatedQuestions = [...generatedExam.questions];
+        updatedQuestions[index] = { ...updatedQuestions[index], answerKey: tempAnswerKey };
+        setGeneratedExam({ ...generatedExam, questions: updatedQuestions });
+        setEditingAnswerIndex(null);
+        setTempAnswerKey("");
+    };
+
+    const handleCancelEdit = () => {
+        setEditingAnswerIndex(null);
+        setTempAnswerKey("");
     };
 
     const handleSaveAssignment = async () => {
@@ -180,7 +201,12 @@ const AssignmentBuilder: React.FC = () => {
                 <div className="space-y-6">
                     {generatedExam ? (
                         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col">
-                            <h2 className="text-lg font-bold text-slate-900 mb-2">{generatedExam.title}</h2>
+                            <div className="mb-4">
+                                <h2 className="text-lg font-bold text-slate-900">{generatedExam.title}</h2>
+                                <p className="text-xs text-amber-600 font-medium mt-1 flex items-center gap-1">
+                                    <span>⚠️</span> Please review and approve all answer keys before saving
+                                </p>
+                            </div>
                             <div className="flex-1 overflow-y-auto max-h-[500px] pr-2 space-y-4 mb-4">
                                 {generatedExam.questions.map((q: any, i: number) => (
                                     <div key={i} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
@@ -190,9 +216,45 @@ const AssignmentBuilder: React.FC = () => {
                                         </div>
                                         <p className="text-slate-600 text-sm mb-3">{q.text}</p>
                                         {q.answerKey && (
-                                            <div className="mt-3 pt-3 border-t border-slate-200">
-                                                <p className="text-xs font-semibold text-green-700 mb-1">📝 Answer Key (Teacher Only):</p>
-                                                <p className="text-xs text-slate-500 italic">{q.answerKey}</p>
+                                            <div className="mt-3 pt-3 border-t border-green-200 bg-green-50 -mx-4 -mb-4 px-4 py-3 rounded-b-xl">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <p className="text-xs font-semibold text-green-700">📝 Answer Key (AI Generated):</p>
+                                                    {editingAnswerIndex !== i && (
+                                                        <button
+                                                            onClick={() => handleEditAnswerKey(i, q.answerKey)}
+                                                            className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium"
+                                                        >
+                                                            <Edit2 size={12} /> Edit
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {editingAnswerIndex === i ? (
+                                                    <div>
+                                                        <textarea
+                                                            value={tempAnswerKey}
+                                                            onChange={(e) => setTempAnswerKey(e.target.value)}
+                                                            className="w-full p-2 text-sm border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none mb-2"
+                                                            rows={4}
+                                                            placeholder="Enter marking guidance and model answer..."
+                                                        />
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => handleSaveAnswerKey(i)}
+                                                                className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700"
+                                                            >
+                                                                <Check size={14} /> Save
+                                                            </button>
+                                                            <button
+                                                                onClick={handleCancelEdit}
+                                                                className="flex items-center gap-1 px-3 py-1 bg-slate-300 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-400"
+                                                            >
+                                                                <X size={14} /> Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-green-900 whitespace-pre-wrap">{q.answerKey}</p>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -210,7 +272,7 @@ const AssignmentBuilder: React.FC = () => {
                                     disabled={isSaving}
                                     className="flex-[2] py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                                 >
-                                    <Save size={18} /> {isSaving ? 'Saving...' : 'Assign to Class'}
+                                    <Save size={18} /> {isSaving ? 'Saving...' : 'Approve & Save Assignment'}
                                 </button>
                             </div>
                         </div>
