@@ -43,7 +43,11 @@ const AssignmentBuilder: React.FC = () => {
     };
 
     const handleSaveAssignment = async () => {
-        if (!generatedExam || !auth.currentUser || !classId) return;
+        if (!generatedExam || !auth.currentUser || !classId) {
+            console.error('Missing required data:', { generatedExam: !!generatedExam, user: !!auth.currentUser, classId });
+            alert('Missing required information. Please try again.');
+            return;
+        }
         setIsSaving(true);
         try {
             const newAssignment: Partial<Assignment> = {
@@ -60,11 +64,15 @@ const AssignmentBuilder: React.FC = () => {
                 createdAt: Date.now()
             };
 
-            await addDoc(collection(db, 'assignments'), newAssignment);
+            console.log('Attempting to save assignment:', newAssignment);
+            const docRef = await addDoc(collection(db, 'assignments'), newAssignment);
+            console.log('Assignment saved successfully with ID:', docRef.id);
             navigate(`/teacher/class/${classId}`);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Save failed:", error);
-            alert("Failed to save assignment.");
+            console.error("Error code:", error.code);
+            console.error("Error message:", error.message);
+            alert(`Failed to save assignment: ${error.message || 'Unknown error'}`);
         }
         setIsSaving(false);
     };
