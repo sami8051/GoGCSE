@@ -55,14 +55,14 @@ service cloud.firestore {
         (
            // If creating new doc - allow setting initial status to 'pending' and isApproved to false
            (!exists(/databases/$(database)/documents/users/$(userId)) && 
-            !request.resource.data.keys().hasAny(['isAdmin', 'disabled']) &&
+            !request.resource.data.keys().hasAny(['isAdmin', 'isTeacher', 'disabled']) &&
             // Only allow safe initial values
             (!request.resource.data.keys().hasAny(['status']) || request.resource.data.status == 'pending') &&
             (!request.resource.data.keys().hasAny(['isApproved']) || request.resource.data.isApproved == false)
            ) ||
            // If updating existing doc - cannot modify protected fields at all
            (exists(/databases/$(database)/documents/users/$(userId)) && 
-            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isApproved', 'status', 'disabled'])
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isTeacher', 'isApproved', 'status', 'disabled'])
            )
         );
       // Admin can write all fields
