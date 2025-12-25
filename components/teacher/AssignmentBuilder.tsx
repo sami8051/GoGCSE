@@ -65,7 +65,7 @@ const AssignmentBuilder: React.FC = () => {
                 title: generatedExam.title,
                 questions: generatedExam.questions,
                 settings,
-                status: 'active',
+                status: 'archived',
                 createdAt: Date.now()
             };
 
