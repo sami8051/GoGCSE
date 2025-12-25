@@ -109,7 +109,7 @@ const AdminLayout: React.FC = () => {
 
                     {isSuperAdmin && (
                         <div className="pt-3 mt-3 border-t border-slate-700">
-                            {!collapsed && <p className="px-4 py-2 text-xs text-slate-500 uppercase tracking-wider">Super Admin Control</p>}
+                            {!collapsed && <p className="px-4 py-2 text-xs text-slate-500 uppercase tracking-wider">Super Admin</p>}
                             {superAdminItems.map((item) => (
                                 <NavLink
                                     key={item.to}
