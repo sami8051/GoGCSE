@@ -195,10 +195,14 @@ service cloud.firestore {
     match /assignment_results/{resultId} {
       // ANY authenticated student can create their own results (unapproved users can submit assignments)
       allow create: if request.auth != null && request.resource.data.studentId == request.auth.uid;
-      // Student can read their own, teacher/admin can read all
+      // Student can read their own, teacher can read results from their classes, admin can read all
       allow read: if request.auth != null && (
         resource.data.studentId == request.auth.uid ||
-        isAdmin()
+        isAdmin() ||
+        // Teacher can read if they own the class that contains the assignment
+        (isTeacher() && 
+         exists(/databases/$(database)/documents/assignments/$(resource.data.assignmentId)) &&
+         get(/databases/$(database)/documents/assignments/$(resource.data.assignmentId)).data.teacherId == request.auth.uid)
       ); 
       // Student can update their own, admin can update any
       allow update: if request.auth != null && (
