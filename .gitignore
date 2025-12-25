@@ -1,0 +1,41 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+# dist - INCLUDING in git for Hostinger deployment
+dist-ssr
+*.local
+
+# Prevent development index.html from being deployed (conflicts with production)
+/index.html
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment files (API keys, secrets)
+.env
+.env.local
+.env.production
+.env*.local
+
+# Test files that may contain API keys
+test_*.js
+list_models.js
+
+# Firebase service account keys (if any)
+*-firebase-adminsdk*.json
+serviceAccountKey.json

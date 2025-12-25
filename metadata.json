@@ -1,0 +1,5 @@
+{
+  "name": "Go GCSE English Sim",
+  "description": "A fully simulated Go GCSE English Language mock exam platform with AI-generated papers, real-time exam interface, and automated marking against official assessment objectives.",
+  "requestFramePermissions": []
+}
