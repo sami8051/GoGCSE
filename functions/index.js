@@ -544,5 +544,80 @@ app.post('/evaluate-writing', async (req, res) => {
     }
 });
 
+// 6. Generate Practice Set for Assignments
+app.post('/generate-practice-set', async (req, res) => {
+    try {
+        const { topic, difficulty, numQuestions } = req.body;
+        console.log(`Generating practice set: ${numQuestions} questions on "${topic}" (${difficulty})`);
+
+        const ai = await initializeAI();
+
+        const prompt = `
+            You are an expert GCSE English Language examiner creating a practice assignment.
+            
+            CRITICAL COPYRIGHT NOTICE:
+            Generate ORIGINAL practice questions based on the topic and difficulty level. DO NOT reproduce real past paper questions word-for-word to avoid copyright infringement.
+            
+            Task: Create ${numQuestions} GCSE English Language practice questions on the topic: "${topic}"
+            Difficulty Level: ${difficulty}
+            
+            Guidelines:
+            - Questions should be appropriate for GCSE English Language students
+            - Include a mix of question types (retrieval, analysis, evaluation, writing)
+            - Each question should have clear mark allocations
+            - For analysis/evaluation questions, specify which AO (Assessment Objective) is being tested
+            - Questions should be challenging but fair for the ${difficulty} level
+            
+            Difficulty Guidelines:
+            - Easy/Foundation: Focus on retrieval, basic comprehension, simple analysis
+            - Medium/Standard: Mix of retrieval, analysis, some evaluation
+            - Hard/Advanced: Complex analysis, critical evaluation, sophisticated writing tasks
+            - Mixed: Variety of difficulty levels
+            
+            Output JSON format:
+            {
+              "title": "Practice Set: [Topic]",
+              "questions": [
+                {
+                  "number": "1",
+                  "text": "Question text here",
+                  "marks": number,
+                  "aos": ["AO1", "AO2", etc.],
+                  "type": "short" | "long" | "extended",
+                  "guidance": "Brief guidance for students (optional)"
+                }
+              ]
+            }
+            
+            IMPORTANT: Ensure output is strictly valid JSON. No markdown formatting.
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.0-flash-exp',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+            }
+        });
+
+        const text = response.text || (typeof response.text === 'function' ? response.text() : JSON.stringify(response)) || "{}";
+        const data = JSON.parse(cleanJson(text));
+
+        // Validate response
+        if (!data.questions || !Array.isArray(data.questions)) {
+            throw new Error("Invalid response format: missing questions array");
+        }
+
+        res.json({
+            title: data.title || `Practice Set: ${topic}`,
+            questions: data.questions
+        });
+
+    } catch (error) {
+        console.error("Generate Practice Set Failed:", error);
+        res.status(500).json({ error: "Failed to generate practice set", details: error.message });
+    }
+});
+
 // export 
 exports.api = onRequest({ cors: true, timeoutSeconds: 300 }, app);
