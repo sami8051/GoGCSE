@@ -205,11 +205,11 @@ const ClassManager: React.FC = () => {
                                         onClick={() => handleToggleStatus(assignment.id, assignment.status || 'active')}
                                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                                             assignment.status === 'active' 
-                                                ? 'bg-amber-50 hover:bg-amber-100 text-amber-600' 
-                                                : 'bg-green-50 hover:bg-green-100 text-green-600'
+                                                ? 'bg-green-50 hover:bg-green-100 text-green-600' 
+                                                : 'bg-amber-50 hover:bg-amber-100 text-amber-600'
                                         }`}
                                     >
-                                        {assignment.status === 'active' ? 'Archive' : 'Publish'}
+                                        {assignment.status === 'active' ? 'Published' : 'Archived'}
                                     </button>
                                     <button
                                         onClick={() => handleDeleteAssignment(assignment.id)}
@@ -392,11 +392,11 @@ const ClassManager: React.FC = () => {
                                     onClick={() => handleToggleStatus(viewingAssignment.id, viewingAssignment.status || 'active')}
                                     className={`flex-1 py-3 rounded-xl font-bold transition-colors ${
                                         viewingAssignment.status === 'active'
-                                            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                            : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                                     }`}
                                 >
-                                    {viewingAssignment.status === 'active' ? 'Archive Assignment' : 'Publish Assignment'}
+                                    {viewingAssignment.status === 'active' ? 'Published - Click to Archive' : 'Archived - Click to Publish'}
                                 </button>
                                 <button
                                     onClick={() => handleDeleteAssignment(viewingAssignment.id)}
