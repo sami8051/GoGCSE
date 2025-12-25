@@ -42,6 +42,7 @@ import ViewTeacherClasses from './components/teacher/ViewTeacherClasses';
 import StudentDictionary from './components/teacher/StudentDictionary';
 import TeacherLayout from './components/teacher/TeacherLayout';
 import StudentClassroom from './components/student/StudentClassroom';
+import StudentClassView from './components/student/StudentClassView';
 import AssignmentRunner from './components/student/AssignmentRunner';
 import TeacherRoute from './components/TeacherRoute';
 
@@ -150,9 +151,11 @@ const AppContent: React.FC = () => {
               <StudentClassroom />
             </ProtectedRoute>
           } />
-          {/* Note: /student/class/:classId not strictly needed if dashboard lists assignments, but nice to have. 
-          For Phase 1, StudentClassroom lists classes, click -> maybe go to specific view?
-          Let's stick to AssignmentRunner for now. */}
+          <Route path="/student/class/:classId" element={
+            <ProtectedRoute>
+              <StudentClassView />
+            </ProtectedRoute>
+          } />
           {/* Route to take an assignment */}
           <Route path="/student/assignment/:assignmentId" element={
             <ProtectedRoute>
