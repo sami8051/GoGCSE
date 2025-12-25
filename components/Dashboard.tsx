@@ -24,31 +24,26 @@ const Dashboard: React.FC = () => {
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [dismissedAnnouncements, setDismissedAnnouncements] = useState<Set<string>>(new Set());
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; examId: string; examTitle: string } | null>(null);
+    const [isTeacher, setIsTeacher] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             setUser(user);
             if (user) {
-                // Check if user is a teacher (but not admin)
-                const isTeacher = await checkIsTeacher(user.uid);
-                const isAdmin = user.email && ADMIN_EMAILS.includes(user.email);
-                
-                // Redirect teachers (who are not admins) to teacher dashboard
-                if (isTeacher && !isAdmin) {
-                    navigate('/teacher');
-                    return;
-                }
-                
+                // Check if user is a teacher
+                const teacherStatus = await checkIsTeacher(user.uid);
+                setIsTeacher(teacherStatus);
+                    
                 fetchHistory(user.uid);
                 fetchAnnouncements();
             } else {
                 setLoading(false);
             }
         });
-
+    
         return () => unsubscribe();
-    }, [navigate]);
+    }, []);
 
     const fetchHistory = async (uid: string) => {
         const data = await getUserHistory(uid);
@@ -123,6 +118,16 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+                    {/* Teacher Dashboard Button - only for teachers */}
+                    {isTeacher && (
+                        <button
+                            onClick={() => navigate('/teacher')}
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-bold rounded-lg shadow-md hover:shadow-lg hover:from-blue-700 hover:to-cyan-700 transition-all"
+                        >
+                            <BookOpen size={16} />
+                            <span className="hidden sm:inline">Teacher Dashboard</span>
+                        </button>
+                    )}
                     {/* Admin Panel Button - only for admins */}
                     {user?.email && ADMIN_EMAILS.includes(user.email) && (
                         <button

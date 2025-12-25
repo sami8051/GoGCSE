@@ -24,6 +24,7 @@ const Landing: React.FC = () => {
     const [tempApiKey, setTempApiKey] = useState("");
     const [user, setUser] = useState<User | null>(null);
     const [isApproved, setIsApproved] = useState(false);
+    const [isTeacher, setIsTeacher] = useState(false);
     const [featureFlags, setFeatureFlags] = useState<FeatureFlags>({
         paper1Enabled: true,
         paper2Enabled: true,
@@ -35,22 +36,17 @@ const Landing: React.FC = () => {
             setUser(currentUser);
             if (currentUser) {
                 syncUserProfile(currentUser);
-
+    
                 try {
-                    // Check if user is admin first
                     if (ADMIN_EMAILS.includes(currentUser.email || '')) {
                         setIsApproved(true);
                         return;
                     }
-
-                    // Check if user is a teacher (redirect to teacher dashboard)
-                    const isTeacher = await checkIsTeacher(currentUser.uid);
-                    if (isTeacher) {
-                        navigate('/teacher');
-                        return;
-                    }
-
-                    // Regular student/user approval check
+    
+                    // Check if user is a teacher
+                    const teacherStatus = await checkIsTeacher(currentUser.uid);
+                    setIsTeacher(teacherStatus);
+    
                     const docRef = doc(db, 'users', currentUser.uid);
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists() && docSnap.data().isApproved) {
@@ -67,7 +63,7 @@ const Landing: React.FC = () => {
             }
         });
         return () => unsubscribe();
-    }, [navigate]);
+    }, []);
 
     useEffect(() => {
         const loadFeatureFlags = async () => {
@@ -203,13 +199,24 @@ const Landing: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3">
                         {user ? (
-                            <button
-                                onClick={() => navigate('/dashboard')}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all text-sm"
-                            >
-                                <LayoutDashboard size={16} />
-                                <span className="hidden sm:inline">Dashboard</span>
-                            </button>
+                            <>
+                                {isTeacher && (
+                                    <button
+                                        onClick={() => navigate('/teacher')}
+                                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all text-sm"
+                                    >
+                                        <BookOpen size={16} />
+                                        <span className="hidden sm:inline">Teacher Dashboard</span>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => navigate('/dashboard')}
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all text-sm"
+                                >
+                                    <LayoutDashboard size={16} />
+                                    <span className="hidden sm:inline">Dashboard</span>
+                                </button>
+                            </>
                         ) : (
                             <button
                                 onClick={() => navigate('/login')}
