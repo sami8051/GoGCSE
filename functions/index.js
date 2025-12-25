@@ -1,13 +1,12 @@
 
 const { onRequest } = require("firebase-functions/v2/https");
+const { defineString } = require('firebase-functions/params');
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenAI } = require('@google/genai');
 
-// In Firebase Functions, environment variables are set via:
-// firebase functions:config:set gemini.key="YOUR_KEY" (v1)
-// or use .env file for v2 (preferred)
-// For now, we will inspect process.env directly.
+// Define the API key as a parameter (will be set during deployment)
+const geminiApiKey = defineString('GEMINI_API_KEY');
 
 const app = express();
 
@@ -15,13 +14,16 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json({ limit: '10mb' }));
 
-// Initialize Gemini
-// Note: When deployed, ensure GEMINI_API_KEY is set in your environment configuration
-const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-if (!apiKey) {
-    console.warn("WARNING: GEMINI_API_KEY is not set in environment variables.");
-}
-const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+// Initialize Gemini - will use the parameter value
+const initializeAI = () => {
+  const key = geminiApiKey.value() || process.env.GEMINI_API_KEY;
+  if (!key) {
+    console.warn("WARNING: GEMINI_API_KEY is not set");
+    return new GoogleGenAI({ apiKey: '' });
+  }
+  console.log("Gemini API key loaded (length:", key.length, ")");
+  return new GoogleGenAI({ apiKey: key });
+};
 
 // ------------------------------------------------------------------
 // Helpers
@@ -103,6 +105,7 @@ app.post('/generate-exam', async (req, res) => {
         const { type, imageSize = '1K' } = req.body;
         console.log(`Generating ${type} exam...`);
 
+        const ai = initializeAI();
         const isPaper1 = type === 'PAPER_1'; // Assuming enum value matches string
 
         // [System Instruction from services/geminiService.ts]
