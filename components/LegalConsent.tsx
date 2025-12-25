@@ -20,12 +20,39 @@ const LegalConsent: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
-            setLoading(false);
             if (!currentUser) {
                 navigate('/login');
+                setLoading(false);
+                return;
             }
+
+            // Check if user has already consented
+            try {
+                const userDocRef = doc(db, 'users', currentUser.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    
+                    // If user is already approved, go to dashboard
+                    if (userData.isApproved) {
+                        navigate('/dashboard');
+                        return;
+                    }
+                    
+                    // If user has already consented but not approved, go to pending page
+                    if (userData.hasConsented) {
+                        navigate('/pending-approval');
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking consent status:', error);
+            }
+            
+            setLoading(false);
         });
         return () => unsubscribe();
     }, [navigate]);
