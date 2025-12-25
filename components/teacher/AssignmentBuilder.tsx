@@ -188,7 +188,13 @@ const AssignmentBuilder: React.FC = () => {
                                             <span className="font-bold text-slate-700">Q{q.number}</span>
                                             <span className="text-xs bg-slate-200 px-2 py-1 rounded text-slate-600">{q.marks} Marks</span>
                                         </div>
-                                        <p className="text-slate-600 text-sm">{q.text}</p>
+                                        <p className="text-slate-600 text-sm mb-3">{q.text}</p>
+                                        {q.answerKey && (
+                                            <div className="mt-3 pt-3 border-t border-slate-200">
+                                                <p className="text-xs font-semibold text-green-700 mb-1">📝 Answer Key (Teacher Only):</p>
+                                                <p className="text-xs text-slate-500 italic">{q.answerKey}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

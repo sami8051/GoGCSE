@@ -672,6 +672,7 @@ app.post('/api/generate-practice-set', authenticateUser, async (req, res) => {
             - Each question should have clear mark allocations
             - For analysis/evaluation questions, specify which AO (Assessment Objective) is being tested
             - Questions should be challenging but fair for the ${difficulty} level
+            - MUST provide detailed marking guidance/answer key for each question
             
             Difficulty Guidelines:
             - Easy/Foundation: Focus on retrieval, basic comprehension, simple analysis
@@ -689,12 +690,15 @@ app.post('/api/generate-practice-set', authenticateUser, async (req, res) => {
                   "marks": number,
                   "aos": ["AO1", "AO2", etc.],
                   "type": "short" | "long" | "extended",
-                  "guidance": "Brief guidance for students (optional)"
+                  "guidance": "Brief guidance for students (optional)",
+                  "answerKey": "Detailed marking guidance and model answer for teachers"
                 }
               ]
             }
             
-            IMPORTANT: Ensure output is strictly valid JSON. No markdown formatting.
+            IMPORTANT: 
+            - Ensure output is strictly valid JSON. No markdown formatting.
+            - MUST include answerKey for every question with detailed marking criteria
         `;
 
         const response = await ai.models.generateContent({

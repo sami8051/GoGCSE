@@ -381,6 +381,14 @@ const ClassManager: React.FC = () => {
                                                     ))}
                                                 </div>
                                             )}
+                                            {question.answerKey && (
+                                                <div className="mt-3 pt-3 border-t border-green-200 bg-green-50 -mx-4 -mb-4 px-4 py-3 rounded-b-xl">
+                                                    <p className="text-xs font-bold text-green-800 mb-1 flex items-center gap-1">
+                                                        <span className="text-sm">📝</span> Answer Key / Marking Guidance
+                                                    </p>
+                                                    <p className="text-sm text-green-900 whitespace-pre-wrap">{question.answerKey}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     )) || <p className="text-slate-500 italic">No questions available</p>}
                                 </div>
