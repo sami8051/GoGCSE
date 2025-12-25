@@ -76,6 +76,14 @@ service cloud.firestore {
         );
       // Admin can write all fields
       allow write: if isAdmin();
+      
+      // User subcollections: enrolled_classes
+      match /enrolled_classes/{classId} {
+        // Users can read/write their own enrolled classes
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+        // Admin can access all
+        allow read, write: if isAdmin();
+      }
     }
 
     // === USER CONSENTS: User can only access their own ===
