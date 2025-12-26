@@ -110,44 +110,47 @@ const Dashboard: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-50 font-sans">
             <SEOHead title="Student Dashboard" description="Track your Edexcel GCSE English mock exam progress and view detailed grade reports." />
-            <nav className="bg-white border-b border-gray-200 py-4 px-6 md:px-12 flex flex-col md:flex-row md:justify-between md:items-center gap-4 sticky top-0 z-10">
+            <nav className="bg-white border-b border-gray-200 py-3 px-4 md:px-12 sticky top-0 z-10">
                 <div className="flex items-center justify-between">
+                    {/* Left: Logo */}
                     <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
                         <img src={appLogo} alt="Logo" className="w-10 h-10 rounded-lg shadow-sm" />
                         <span className="font-bold text-lg text-gray-800">Go GCSE</span>
                     </div>
-                </div>
-                <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-                    {/* Teacher Dashboard Button - only for teachers */}
-                    {isTeacher && (
-                        <button
-                            onClick={() => navigate('/teacher')}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-bold rounded-lg shadow-md hover:shadow-lg hover:from-blue-700 hover:to-cyan-700 transition-all"
+                    
+                    {/* Right: Buttons + Profile */}
+                    <div className="flex items-center gap-2">
+                        {/* Teacher Dashboard Button - only for teachers */}
+                        {isTeacher && (
+                            <button
+                                onClick={() => navigate('/teacher')}
+                                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-bold rounded-lg shadow-md hover:shadow-lg hover:from-blue-700 hover:to-cyan-700 transition-all"
+                            >
+                                <BookOpen size={16} />
+                                <span className="hidden sm:inline">Teacher Dashboard</span>
+                            </button>
+                        )}
+                        {/* Admin Panel Button - only for admins */}
+                        {user?.email && ADMIN_EMAILS.includes(user.email) && (
+                            <button
+                                onClick={() => navigate('/admin')}
+                                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold rounded-lg shadow-md hover:shadow-lg hover:from-purple-700 hover:to-indigo-700 transition-all"
+                            >
+                                <Shield size={16} />
+                                <span className="hidden sm:inline">Admin Panel</span>
+                            </button>
+                        )}
+                        <div
+                            onClick={() => setShowProfileModal(true)}
+                            className="flex items-center gap-2 text-sm font-bold text-gray-800 bg-white border border-gray-200 pl-1 pr-3 py-1 rounded-full shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
                         >
-                            <BookOpen size={16} />
-                            <span className="hidden sm:inline">Teacher Dashboard</span>
-                        </button>
-                    )}
-                    {/* Admin Panel Button - only for admins */}
-                    {user?.email && ADMIN_EMAILS.includes(user.email) && (
-                        <button
-                            onClick={() => navigate('/admin')}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold rounded-lg shadow-md hover:shadow-lg hover:from-purple-700 hover:to-indigo-700 transition-all"
-                        >
-                            <Shield size={16} />
-                            <span className="hidden sm:inline">Admin Panel</span>
-                        </button>
-                    )}
-                    <div
-                        onClick={() => setShowProfileModal(true)}
-                        className="flex items-center gap-2 text-sm font-bold text-gray-800 bg-white border border-gray-100 pl-1 pr-3 py-1 rounded-full shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
-                    >
-                        <img
-                            src={user?.photoURL || profileIcon}
-                            alt="Profile"
-                            className="w-8 h-8 rounded-full border border-indigo-100 object-cover"
-                        />
-                        <span className="hidden sm:inline">{user?.displayName || user?.email}</span>
+                            <img
+                                src={user?.photoURL || profileIcon}
+                                alt="Profile"
+                                className="w-9 h-9 rounded-full border-2 border-gray-200 object-cover"
+                            />
+                            <span className="hidden sm:inline">{user?.displayName || user?.email}</span>
+                        </div>
                     </div>
                 </div>
             </nav>
