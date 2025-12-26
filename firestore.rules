@@ -217,6 +217,15 @@ service cloud.firestore {
          exists(/databases/$(database)/documents/assignments/$(resource.data.assignmentId)) &&
          get(/databases/$(database)/documents/assignments/$(resource.data.assignmentId)).data.teacherId == request.auth.uid)
       );
+      // Student can delete their own, admin can delete any, teacher can delete results from their classes
+      allow delete: if request.auth != null && (
+        resource.data.studentId == request.auth.uid ||
+        isAdmin() ||
+        // Teacher can delete if result belongs to their class
+        (isTeacher() && 
+         exists(/databases/$(database)/documents/classes/$(resource.data.classId)) &&
+         get(/databases/$(database)/documents/classes/$(resource.data.classId)).data.teacherId == request.auth.uid)
+      );
     }
 
     // =====================================================

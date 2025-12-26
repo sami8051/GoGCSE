@@ -92,19 +92,33 @@ const ClassManager: React.FC = () => {
 
     const handleRemoveStudent = async (studentUid: string, studentName: string) => {
         if (!classId) return;
-        if (!window.confirm(`Are you sure you want to remove ${studentName} from this class?`)) return;
+        if (!window.confirm(`Are you sure you want to remove ${studentName} from this class?\n\nThis will also delete all their assignment submissions for this class.`)) return;
         
         try {
-            // 1. Remove from class/members subcollection
+            // 1. Find and delete all assignment results for this student in this class
+            const resultsQuery = query(
+                collection(db, 'assignment_results'),
+                where('studentId', '==', studentUid),
+                where('classId', '==', classId)
+            );
+            const resultsSnapshot = await getDocs(resultsQuery);
+            
+            // Delete all results
+            const deletePromises = resultsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+            await Promise.all(deletePromises);
+            
+            console.log(`Deleted ${resultsSnapshot.size} assignment submissions for ${studentName}`);
+            
+            // 2. Remove from class/members subcollection
             await deleteDoc(doc(db, 'classes', classId, 'members', studentUid));
             
-            // 2. Remove from user's enrolled_classes subcollection
+            // 3. Remove from user's enrolled_classes subcollection
             await deleteDoc(doc(db, 'users', studentUid, 'enrolled_classes', classId));
             
-            // 3. Update local state
+            // 4. Update local state
             setMembers(prev => prev.filter(m => m.uid !== studentUid));
             
-            alert(`${studentName} has been removed from the class.`);
+            alert(`${studentName} has been removed from the class.\n${resultsSnapshot.size} assignment submission(s) were deleted.`);
         } catch (error: any) {
             console.error("Error removing student:", error);
             alert(`Failed to remove student: ${error.message}`);
