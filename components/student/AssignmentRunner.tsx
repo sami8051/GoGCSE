@@ -107,6 +107,16 @@ const AssignmentRunner: React.FC = () => {
         if (!autoSubmit && !window.confirm("Submit assignment? You cannot change your answers after submitting.")) return;
         if (!auth.currentUser || !assignment) return;
         
+        // Validate assignment has required fields
+        if (!assignment.id) {
+            alert("Error: Assignment ID is missing.");
+            return;
+        }
+        if (!assignment.classId) {
+            alert("Error: Assignment is not linked to a class.");
+            return;
+        }
+        
         // Clear timer
         if (timerRef.current) {
             clearInterval(timerRef.current);
@@ -115,8 +125,16 @@ const AssignmentRunner: React.FC = () => {
         setSubmitting(true);
 
         try {
+            console.log('[AssignmentRunner] Starting submission...');
+            console.log('[AssignmentRunner] Assignment ID:', assignment.id);
+            console.log('[AssignmentRunner] Class ID:', assignment.classId);
+            console.log('[AssignmentRunner] Student ID:', auth.currentUser.uid);
+            console.log('[AssignmentRunner] Student Name:', auth.currentUser.displayName);
+            
             // Transform answers record to array for storage
             const answersArray = Object.values(answers);
+            console.log('[AssignmentRunner] Answers array:', answersArray);
+            
             const studentAnswersText = assignment.questions.map(q => 
                 answers[q.id || q.number]?.text || ''
             );
@@ -136,6 +154,8 @@ const AssignmentRunner: React.FC = () => {
                 markingStatus: 'pending'
             });
 
+            console.log('[AssignmentRunner] Submission successful! Result ID:', resultRef.id);
+            
             // Show success message
             if (autoSubmit) {
                 alert("Time's up! Your assignment has been submitted.\n\nYour teacher will review and provide feedback.");
@@ -145,9 +165,20 @@ const AssignmentRunner: React.FC = () => {
 
             navigate('/student/classroom');
 
-        } catch (error) {
-            console.error("Submission failed:", error);
-            alert("Failed to submit assignment.");
+        } catch (error: any) {
+            console.error("[AssignmentRunner] Submission failed:", error);
+            console.error("[AssignmentRunner] Error code:", error.code);
+            console.error("[AssignmentRunner] Error message:", error.message);
+            console.error("[AssignmentRunner] Full error:", error);
+            
+            let errorMessage = "Failed to submit assignment.";
+            if (error.code === 'permission-denied') {
+                errorMessage += "\n\nPermission denied. Please make sure you're logged in and have access to this assignment.";
+            } else if (error.message) {
+                errorMessage += `\n\nError: ${error.message}`;
+            }
+            
+            alert(errorMessage);
         }
         setSubmitting(false);
     };
