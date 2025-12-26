@@ -30,6 +30,8 @@ const ClassManager: React.FC = () => {
     const [viewingAssignment, setViewingAssignment] = useState<Assignment | null>(null);
     const [editingTitle, setEditingTitle] = useState(false);
     const [newTitle, setNewTitle] = useState('');
+    const [editingTimeLimit, setEditingTimeLimit] = useState(false);
+    const [newTimeLimit, setNewTimeLimit] = useState<number | undefined>(undefined);
     const [viewingSubmissions, setViewingSubmissions] = useState<Assignment | null>(null);
     const [submissions, setSubmissions] = useState<AssignmentResult[]>([]);
     const [loadingSubmissions, setLoadingSubmissions] = useState(false);
@@ -90,6 +92,8 @@ const ClassManager: React.FC = () => {
         setViewingAssignment(assignment);
         setNewTitle(assignment.title || '');
         setEditingTitle(false);
+        setNewTimeLimit(assignment.settings?.timeLimitMinutes);
+        setEditingTimeLimit(false);
     };
 
     const handleUpdateTitle = async () => {
@@ -106,6 +110,31 @@ const ClassManager: React.FC = () => {
         } catch (error) {
             console.error("Error updating title:", error);
             alert("Failed to update title.");
+        }
+    };
+
+    const handleUpdateTimeLimit = async () => {
+        if (!viewingAssignment) return;
+        try {
+            const updateData: any = {
+                'settings.timeLimitMinutes': newTimeLimit || null
+            };
+            
+            await updateDoc(doc(db, 'assignments', viewingAssignment.id), updateData);
+            
+            const updatedSettings = {
+                ...viewingAssignment.settings,
+                timeLimitMinutes: newTimeLimit
+            };
+            
+            setAssignments(prev => prev.map(a => 
+                a.id === viewingAssignment.id ? { ...a, settings: updatedSettings } : a
+            ));
+            setViewingAssignment({ ...viewingAssignment, settings: updatedSettings });
+            setEditingTimeLimit(false);
+        } catch (error) {
+            console.error("Error updating time limit:", error);
+            alert("Failed to update time limit.");
         }
     };
 
@@ -394,11 +423,55 @@ const ClassManager: React.FC = () => {
                                 </div>
                                 <div className="bg-slate-50 p-4 rounded-xl">
                                     <p className="text-xs text-slate-500 uppercase font-bold mb-1">Time Limit</p>
-                                    <p className="text-lg font-bold text-slate-900">
-                                        {viewingAssignment.settings?.timeLimitMinutes 
-                                            ? `${viewingAssignment.settings.timeLimitMinutes} min` 
-                                            : 'No limit'}
-                                    </p>
+                                    {editingTimeLimit ? (
+                                        <div className="flex items-center gap-2">
+                                            <select
+                                                value={newTimeLimit || ''}
+                                                onChange={(e) => setNewTimeLimit(e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="text-sm border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            >
+                                                <option value="">No limit</option>
+                                                <option value="15">15 min</option>
+                                                <option value="30">30 min</option>
+                                                <option value="45">45 min</option>
+                                                <option value="60">1 hour</option>
+                                                <option value="90">1.5 hours</option>
+                                                <option value="120">2 hours</option>
+                                            </select>
+                                            <button
+                                                onClick={handleUpdateTimeLimit}
+                                                className="p-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                                title="Save"
+                                            >
+                                                <CheckCircle size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setEditingTimeLimit(false);
+                                                    setNewTimeLimit(viewingAssignment.settings?.timeLimitMinutes);
+                                                }}
+                                                className="p-1 bg-slate-300 text-slate-700 rounded hover:bg-slate-400"
+                                                title="Cancel"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-lg font-bold text-slate-900">
+                                                {viewingAssignment.settings?.timeLimitMinutes 
+                                                    ? `${viewingAssignment.settings.timeLimitMinutes} min` 
+                                                    : 'No limit'}
+                                            </p>
+                                            <button
+                                                onClick={() => setEditingTimeLimit(true)}
+                                                className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                                                title="Edit time limit"
+                                            >
+                                                <Edit2 size={14} />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
