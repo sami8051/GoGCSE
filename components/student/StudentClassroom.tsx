@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../../services/firebase';
 import { collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { Classroom, Assignment } from '../../types';
-import { Users, FileText, ArrowRight, BookOpen, Search, ArrowLeft } from 'lucide-react';
+import { Users, FileText, ArrowRight, BookOpen, Search, ArrowLeft, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const StudentClassroom: React.FC = () => {
@@ -140,14 +140,41 @@ const StudentClassroom: React.FC = () => {
     };
 
     return (
-        <div className="p-8 max-w-6xl mx-auto">
-            <button
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors mb-6 font-medium"
-            >
-                <ArrowLeft size={18} />
-                Back to Dashboard
-            </button>
+        <div className="min-h-screen bg-gray-50">
+            {/* Header */}
+            <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm">
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors font-medium"
+                    >
+                        <ArrowLeft size={18} />
+                        Back to Dashboard
+                    </button>
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="text-right">
+                        <div className="text-sm font-bold text-gray-800">
+                            {auth.currentUser?.displayName || 'Student'}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                            Student
+                        </div>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
+                        {auth.currentUser?.photoURL ? (
+                            <img src={auth.currentUser.photoURL} alt="Student" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <User size={20} />
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <div className="p-8 max-w-6xl mx-auto">
             
             <h1 className="text-3xl font-bold text-slate-900 mb-8">My Classroom</h1>
 
@@ -205,8 +232,9 @@ const StudentClassroom: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-                    )}
+                    )}  
                 </div>
+            </div>
             </div>
         </div>
     );
