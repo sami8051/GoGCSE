@@ -126,6 +126,7 @@ const AssignmentRunner: React.FC = () => {
 
         try {
             console.log('[AssignmentRunner] Starting submission...');
+            console.log('[AssignmentRunner] Assignment data:', assignment);
             console.log('[AssignmentRunner] Assignment ID:', assignment.id);
             console.log('[AssignmentRunner] Class ID:', assignment.classId);
             console.log('[AssignmentRunner] Student ID:', auth.currentUser.uid);
@@ -138,21 +139,26 @@ const AssignmentRunner: React.FC = () => {
             const studentAnswersText = assignment.questions.map(q => 
                 answers[q.id || q.number]?.text || ''
             );
-
-            // Save initial result
-            const resultRef = await addDoc(collection(db, 'assignment_results'), {
+            
+            // Prepare submission data with proper validation
+            const submissionData = {
                 assignmentId: assignment.id,
-                classId: assignment.classId,
+                classId: assignment.classId || null,  // Ensure not undefined
                 studentId: auth.currentUser.uid,
                 studentName: auth.currentUser.displayName || 'Student',
-                score: 0, // Will be updated when teacher marks
+                score: 0,
                 maxScore: assignment.questions.reduce((sum, q) => sum + q.marks, 0),
                 answers: answersArray,
                 completedAt: Date.now(),
                 feedback: "Awaiting teacher feedback",
                 timeSpent: Math.floor((Date.now() - startTime) / 1000),
                 markingStatus: 'pending'
-            });
+            };
+            
+            console.log('[AssignmentRunner] Submission data:', submissionData);
+
+            // Save initial result
+            const resultRef = await addDoc(collection(db, 'assignment_results'), submissionData);
 
             console.log('[AssignmentRunner] Submission successful! Result ID:', resultRef.id);
             
