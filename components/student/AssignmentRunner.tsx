@@ -259,7 +259,8 @@ const AssignmentRunner: React.FC = () => {
             {/* Questions */}
             <div className="max-w-4xl mx-auto p-6 space-y-8 mt-6">
                 {assignment.questions.map((q, index) => {
-                    const questionKey = q.id || q.number || index.toString();
+                    // Use number first (from AI), then id, then index
+                    const questionKey = q.number || q.id || index.toString();
                     console.log(`[AssignmentRunner] Rendering Question ${index + 1}:`, { id: q.id, number: q.number, key: questionKey });
                     
                     return (
