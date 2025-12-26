@@ -201,12 +201,22 @@ const ClassManager: React.FC = () => {
                 console.log('Marking submission:', submission.id);
                 console.log('Student:', submission.studentName);
                 console.log('Assignment ID:', viewingSubmissions.id);
+                console.log('Full submission data:', submission);
                 
-                // Extract student answers
-                const studentAnswers = submission.answers?.map((a: any) => a.text || '') || [];
-                console.log('Student answers:', studentAnswers);
+                // Extract student answers - handle both array and object formats
+                let studentAnswers: string[] = [];
                 
-                if (studentAnswers.length === 0) {
+                if (Array.isArray(submission.answers)) {
+                    // If answers is an array of answer objects
+                    studentAnswers = submission.answers.map((a: any) => a.text || '');
+                } else if (submission.answers && typeof submission.answers === 'object') {
+                    // If answers is an object with keys
+                    studentAnswers = Object.values(submission.answers).map((a: any) => a.text || a || '');
+                }
+                
+                console.log('Extracted student answers:', studentAnswers);
+                
+                if (studentAnswers.length === 0 || studentAnswers.every(a => !a)) {
                     throw new Error('No answers found in submission');
                 }
                 
