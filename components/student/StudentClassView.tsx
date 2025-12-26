@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../../services/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { Classroom, Assignment } from '../../types';
-import { ArrowLeft, FileText, Clock, BookOpen, AlertCircle, CheckCircle, Award } from 'lucide-react';
+import { ArrowLeft, FileText, Clock, BookOpen, AlertCircle, CheckCircle, Award, Lock } from 'lucide-react';
 
 interface AssignmentResult {
     id: string;
@@ -28,12 +28,26 @@ const StudentClassView: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [viewingResult, setViewingResult] = useState<AssignmentResult | null>(null);
     const [viewingAssignment, setViewingAssignment] = useState<Assignment | null>(null);
+    const [isApproved, setIsApproved] = useState(false);
 
     useEffect(() => {
         if (classId && auth.currentUser) {
             loadClassData();
+            checkApprovalStatus();
         }
     }, [classId, auth.currentUser]);
+
+    const checkApprovalStatus = async () => {
+        if (!auth.currentUser) return;
+        try {
+            const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+            if (userDoc.exists()) {
+                setIsApproved(userDoc.data().isApproved ?? false);
+            }
+        } catch (error) {
+            console.error("Error checking approval status:", error);
+        }
+    };
 
     const loadClassData = async () => {
         if (!classId || !auth.currentUser) return;
@@ -244,18 +258,30 @@ const StudentClassView: React.FC = () => {
                                                     <CheckCircle className="text-green-600" size={24} />
                                                     <div>
                                                         <p className="font-bold text-green-900">Completed</p>
-                                                        <p className="text-sm text-green-700">
-                                                            Score: {results[assignment.id].score}/{results[assignment.id].maxScore} 
-                                                            ({Math.round(results[assignment.id].percentage || 0)}%)
-                                                        </p>
+                                                        {isApproved ? (
+                                                            <p className="text-sm text-green-700">
+                                                                Score: {results[assignment.id].score}/{results[assignment.id].maxScore} 
+                                                                ({Math.round(results[assignment.id].percentage || 0)}%)
+                                                            </p>
+                                                        ) : (
+                                                            <p className="text-sm text-amber-700 flex items-center gap-1">
+                                                                <Lock size={14} /> Get approved to see your score
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <button
-                                                    onClick={() => handleViewResult(assignment.id)}
-                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
-                                                >
-                                                    View Results
-                                                </button>
+                                                {isApproved ? (
+                                                    <button
+                                                        onClick={() => handleViewResult(assignment.id)}
+                                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                                                    >
+                                                        View Results
+                                                    </button>
+                                                ) : (
+                                                    <div className="px-4 py-2 bg-amber-100 text-amber-700 font-semibold rounded-lg flex items-center gap-2">
+                                                        <Lock size={16} /> Locked
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ) : (

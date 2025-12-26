@@ -16,10 +16,12 @@ const AssignmentRunner: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
     const [startTime, setStartTime] = useState<number>(Date.now());
+    const [isApproved, setIsApproved] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         loadAssignment();
+        checkApprovalStatus();
         return () => {
             if (timerRef.current) {
                 clearInterval(timerRef.current);
@@ -68,6 +70,18 @@ const AssignmentRunner: React.FC = () => {
             console.error("Error loading assignment:", error);
         }
         setLoading(false);
+    };
+
+    const checkApprovalStatus = async () => {
+        if (!auth.currentUser) return;
+        try {
+            const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+            if (userDoc.exists()) {
+                setIsApproved(userDoc.data().isApproved ?? false);
+            }
+        } catch (error) {
+            console.error("Error checking approval status:", error);
+        }
     };
 
     const handleAnswerChange = (questionId: string, text: string) => {
@@ -131,47 +145,56 @@ const AssignmentRunner: React.FC = () => {
                 maxScore: assignment.questions.reduce((sum, q) => sum + q.marks, 0),
                 answers: answersArray,
                 completedAt: Date.now(),
-                feedback: "AI is marking your assignment...",
+                feedback: isApproved ? "AI is marking your assignment..." : "Submitted. Unlock AI marking by getting approved.",
                 timeSpent: Math.floor((Date.now() - startTime) / 1000),
-                markingStatus: 'pending'
+                markingStatus: isApproved ? 'pending' : 'locked'
             });
 
-            // Auto-mark the assignment using AI
-            try {
-                const gemini = new GeminiService();
-                const markingResult = await gemini.markAssignment(assignment.id!, studentAnswersText);
+            // Auto-mark the assignment using AI (ONLY if approved)
+            if (isApproved) {
+                try {
+                    const gemini = new GeminiService();
+                    const markingResult = await gemini.markAssignment(assignment.id!, studentAnswersText);
 
-                // Update result with marking data
-                await updateDoc(doc(db, 'assignment_results', resultRef.id), {
-                    score: markingResult.totalMarks,
-                    percentage: markingResult.percentage,
-                    feedback: markingResult.overallFeedback,
-                    detailedResults: markingResult.results,
-                    markingStatus: 'complete',
-                    markedAt: Date.now()
-                });
+                    // Update result with marking data
+                    await updateDoc(doc(db, 'assignment_results', resultRef.id), {
+                        score: markingResult.totalMarks,
+                        percentage: markingResult.percentage,
+                        feedback: markingResult.overallFeedback,
+                        detailedResults: markingResult.results,
+                        markingStatus: 'complete',
+                        markedAt: Date.now()
+                    });
 
-                if (autoSubmit) {
-                    alert(`Time's up! Your assignment has been auto-marked.\n\nScore: ${markingResult.totalMarks}/${markingResult.totalPossible} (${Math.round(markingResult.percentage)}%)`);
-                } else {
-                    alert(`Assignment submitted and marked!
+                    if (autoSubmit) {
+                        alert(`Time's up! Your assignment has been auto-marked.\n\nScore: ${markingResult.totalMarks}/${markingResult.totalPossible} (${Math.round(markingResult.percentage)}%)`);
+                    } else {
+                        alert(`Assignment submitted and marked!
 
 Score: ${markingResult.totalMarks}/${markingResult.totalPossible} (${Math.round(markingResult.percentage)}%)
 
 Check your results for detailed feedback.`);
+                    }
+                } catch (markingError) {
+                    console.error("Auto-marking failed:", markingError);
+                    // Update with error status
+                    await updateDoc(doc(db, 'assignment_results', resultRef.id), {
+                        feedback: "Auto-marking failed. Teacher will review manually.",
+                        markingStatus: 'failed'
+                    });
+                    
+                    if (autoSubmit) {
+                        alert("Time's up! Your assignment has been submitted (marking pending).");
+                    } else {
+                        alert("Assignment submitted! Auto-marking failed, your teacher will review it.");
+                    }
                 }
-            } catch (markingError) {
-                console.error("Auto-marking failed:", markingError);
-                // Update with error status
-                await updateDoc(doc(db, 'assignment_results', resultRef.id), {
-                    feedback: "Auto-marking failed. Teacher will review manually.",
-                    markingStatus: 'failed'
-                });
-                
+            } else {
+                // Unapproved user - no AI marking
                 if (autoSubmit) {
-                    alert("Time's up! Your assignment has been submitted (marking pending).");
+                    alert("Time's up! Your assignment has been submitted.\n\nGet your account approved to unlock AI marking and feedback.");
                 } else {
-                    alert("Assignment submitted! Auto-marking failed, your teacher will review it.");
+                    alert("Assignment submitted successfully!\n\nTo unlock AI marking and instant feedback, please get your account approved.");
                 }
             }
 
