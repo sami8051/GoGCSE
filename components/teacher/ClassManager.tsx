@@ -3,7 +3,21 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../services/firebase';
 import { doc, getDoc, collection, getDocs, query, where, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Classroom, ClassMember, Assignment } from '../../types';
-import { Users, FileText, ArrowLeft, Trash2, Clock, CheckCircle, Eye, Edit2, X } from 'lucide-react';
+import { Users, FileText, ArrowLeft, Trash2, Clock, CheckCircle, Eye, Edit2, X, Award, TrendingUp } from 'lucide-react';
+
+interface AssignmentResult {
+    id: string;
+    assignmentId: string;
+    studentId: string;
+    studentName: string;
+    score: number;
+    maxScore: number;
+    percentage?: number;
+    completedAt: number;
+    feedback?: string;
+    detailedResults?: any[];
+    markingStatus?: string;
+}
 
 const ClassManager: React.FC = () => {
     const { classId } = useParams<{ classId: string }>();
@@ -16,6 +30,10 @@ const ClassManager: React.FC = () => {
     const [viewingAssignment, setViewingAssignment] = useState<Assignment | null>(null);
     const [editingTitle, setEditingTitle] = useState(false);
     const [newTitle, setNewTitle] = useState('');
+    const [viewingSubmissions, setViewingSubmissions] = useState<Assignment | null>(null);
+    const [submissions, setSubmissions] = useState<AssignmentResult[]>([]);
+    const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+    const [selectedResult, setSelectedResult] = useState<AssignmentResult | null>(null);
 
     useEffect(() => {
         if (classId) {
@@ -109,6 +127,27 @@ const ClassManager: React.FC = () => {
         }
     };
 
+    const handleViewSubmissions = async (assignment: Assignment) => {
+        setViewingSubmissions(assignment);
+        setLoadingSubmissions(true);
+        try {
+            const resultsQuery = query(
+                collection(db, 'assignment_results'),
+                where('assignmentId', '==', assignment.id)
+            );
+            const resultsSnapshot = await getDocs(resultsQuery);
+            const results = resultsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as AssignmentResult));
+            setSubmissions(results);
+        } catch (error) {
+            console.error("Error loading submissions:", error);
+            alert("Failed to load submissions.");
+        }
+        setLoadingSubmissions(false);
+    };
+
     if (loading) return <div className="p-12 text-center text-slate-500">Loading class details...</div>;
     if (!classroom) return <div className="p-12 text-center text-red-500">Class not found.</div>;
 
@@ -200,6 +239,13 @@ const ClassManager: React.FC = () => {
                                     >
                                         <Eye size={16} />
                                         View Details
+                                    </button>
+                                    <button 
+                                        onClick={() => handleViewSubmissions(assignment)}
+                                        className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg font-medium transition-colors flex items-center gap-2"
+                                    >
+                                        <TrendingUp size={16} />
+                                        Submissions
                                     </button>
                                     <button
                                         onClick={() => handleToggleStatus(assignment.id, assignment.status || 'active')}
@@ -413,6 +459,184 @@ const ClassManager: React.FC = () => {
                                     Delete Assignment
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Submissions Modal */}
+            {viewingSubmissions && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl my-8">
+                        {/* Modal Header */}
+                        <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex justify-between items-start">
+                            <div className="flex-1">
+                                <h2 className="text-2xl font-bold text-slate-900 mb-1">{viewingSubmissions.title} - Submissions</h2>
+                                <p className="text-slate-500">Total Submissions: {submissions.length}</p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setViewingSubmissions(null);
+                                    setSubmissions([]);
+                                    setSelectedResult(null);
+                                }}
+                                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {/* Submissions List */}
+                        <div className="p-6">
+                            {loadingSubmissions ? (
+                                <div className="py-12 text-center text-slate-500">Loading submissions...</div>
+                            ) : submissions.length === 0 ? (
+                                <div className="py-12 text-center">
+                                    <FileText size={48} className="mx-auto text-slate-300 mb-4" />
+                                    <h3 className="text-lg font-bold text-slate-700">No Submissions Yet</h3>
+                                    <p className="text-slate-500">Students haven't submitted this assignment yet.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {submissions.map((result) => (
+                                        <div key={result.id} className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex items-center gap-4 flex-1">
+                                                    <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-lg">
+                                                        {result.studentName?.charAt(0) || 'S'}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h4 className="font-bold text-slate-900">{result.studentName || 'Unknown Student'}</h4>
+                                                        <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
+                                                            <span className="flex items-center gap-1">
+                                                                <Clock size={14} />
+                                                                Submitted {new Date(result.completedAt).toLocaleDateString()}
+                                                            </span>
+                                                            <span className="flex items-center gap-1">
+                                                                <Award size={14} />
+                                                                {result.score}/{result.maxScore} ({Math.round(result.percentage || 0)}%)
+                                                            </span>
+                                                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                                                (result.percentage || 0) >= 80 ? 'bg-green-100 text-green-700' :
+                                                                (result.percentage || 0) >= 60 ? 'bg-blue-100 text-blue-700' :
+                                                                (result.percentage || 0) >= 40 ? 'bg-amber-100 text-amber-700' :
+                                                                'bg-red-100 text-red-700'
+                                                            }`}>
+                                                                {(result.percentage || 0) >= 80 ? 'Excellent' :
+                                                                 (result.percentage || 0) >= 60 ? 'Good' :
+                                                                 (result.percentage || 0) >= 40 ? 'Pass' : 'Needs Improvement'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => setSelectedResult(result)}
+                                                    className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg font-medium transition-colors"
+                                                >
+                                                    View Details
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Individual Result Modal */}
+            {selectedResult && viewingSubmissions && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl my-8">
+                        {/* Modal Header */}
+                        <div className="sticky top-0 bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-t-2xl">
+                            <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <Award className="text-white" size={32} />
+                                        <h2 className="text-2xl font-bold text-white">{selectedResult.studentName}'s Result</h2>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-indigo-50">
+                                        <span>Completed {new Date(selectedResult.completedAt).toLocaleDateString()}</span>
+                                        <span>•</span>
+                                        <span className="font-bold text-white">
+                                            Score: {selectedResult.score}/{selectedResult.maxScore} ({Math.round(selectedResult.percentage || 0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedResult(null)}
+                                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Overall Feedback */}
+                        {selectedResult.feedback && (
+                            <div className="p-6 border-b border-slate-200 bg-slate-50">
+                                <h3 className="text-lg font-bold text-slate-900 mb-2">Overall Feedback</h3>
+                                <p className="text-slate-700 whitespace-pre-wrap">{selectedResult.feedback}</p>
+                            </div>
+                        )}
+
+                        {/* Detailed Results */}
+                        <div className="p-6">
+                            <h3 className="text-lg font-bold text-slate-900 mb-4">Question-by-Question Breakdown</h3>
+                            <div className="space-y-4">
+                                {selectedResult.detailedResults && selectedResult.detailedResults.length > 0 ? (
+                                    selectedResult.detailedResults.map((result: any, index: number) => (
+                                        <div key={index} className="bg-white border border-slate-200 rounded-xl p-5">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <h4 className="font-bold text-slate-900">Question {result.questionNumber}</h4>
+                                                <span className={`px-3 py-1 rounded-lg font-bold text-sm ${
+                                                    result.marksAwarded === result.maxMarks 
+                                                        ? 'bg-green-100 text-green-700' 
+                                                        : result.marksAwarded >= result.maxMarks * 0.6
+                                                        ? 'bg-amber-100 text-amber-700'
+                                                        : 'bg-red-100 text-red-700'
+                                                }`}>
+                                                    {result.marksAwarded}/{result.maxMarks} marks
+                                                </span>
+                                            </div>
+                                            
+                                            {result.feedback && (
+                                                <div className="mb-3">
+                                                    <p className="text-sm font-semibold text-slate-600 mb-1">Feedback:</p>
+                                                    <p className="text-slate-700 text-sm">{result.feedback}</p>
+                                                </div>
+                                            )}
+                                            
+                                            {result.strengths && (
+                                                <div className="mb-2 p-3 bg-green-50 rounded-lg">
+                                                    <p className="text-xs font-bold text-green-800 mb-1">✓ Strengths</p>
+                                                    <p className="text-sm text-green-900">{result.strengths}</p>
+                                                </div>
+                                            )}
+                                            
+                                            {result.improvements && (
+                                                <div className="p-3 bg-blue-50 rounded-lg">
+                                                    <p className="text-xs font-bold text-blue-800 mb-1">💡 Areas for Improvement</p>
+                                                    <p className="text-sm text-blue-900">{result.improvements}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-slate-500">
+                                        <p>Detailed feedback not available</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => setSelectedResult(null)}
+                                className="w-full mt-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors"
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -3,15 +3,31 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../../services/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { Classroom, Assignment } from '../../types';
-import { ArrowLeft, FileText, Clock, BookOpen, AlertCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Clock, BookOpen, AlertCircle, CheckCircle, Award } from 'lucide-react';
+
+interface AssignmentResult {
+    id: string;
+    assignmentId: string;
+    studentId: string;
+    score: number;
+    maxScore: number;
+    percentage?: number;
+    completedAt: number;
+    feedback?: string;
+    detailedResults?: any[];
+    markingStatus?: string;
+}
 
 const StudentClassView: React.FC = () => {
     const { classId } = useParams<{ classId: string }>();
     const navigate = useNavigate();
     const [classroom, setClassroom] = useState<Classroom | null>(null);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
+    const [results, setResults] = useState<Record<string, AssignmentResult>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [viewingResult, setViewingResult] = useState<AssignmentResult | null>(null);
+    const [viewingAssignment, setViewingAssignment] = useState<Assignment | null>(null);
 
     useEffect(() => {
         if (classId && auth.currentUser) {
@@ -60,6 +76,20 @@ const StudentClassView: React.FC = () => {
             assignmentsData.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
             setAssignments(assignmentsData);
 
+            // 4. Load student's results for these assignments
+            const resultsQuery = query(
+                collection(db, 'assignment_results'),
+                where('classId', '==', classId),
+                where('studentId', '==', auth.currentUser.uid)
+            );
+            const resultsSnapshot = await getDocs(resultsQuery);
+            const resultsMap: Record<string, AssignmentResult> = {};
+            resultsSnapshot.docs.forEach(doc => {
+                const data = doc.data() as AssignmentResult;
+                resultsMap[data.assignmentId] = { id: doc.id, ...data };
+            });
+            setResults(resultsMap);
+
         } catch (error) {
             console.error('Error loading class data:', error);
             setError('Failed to load class information');
@@ -70,6 +100,15 @@ const StudentClassView: React.FC = () => {
 
     const handleStartAssignment = (assignmentId: string) => {
         navigate(`/student/assignment/${assignmentId}`);
+    };
+
+    const handleViewResult = (assignmentId: string) => {
+        const result = results[assignmentId];
+        const assignment = assignments.find(a => a.id === assignmentId);
+        if (result && assignment) {
+            setViewingResult(result);
+            setViewingAssignment(assignment);
+        }
     };
 
     if (loading) {
@@ -198,19 +237,145 @@ const StudentClassView: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <button
-                                        onClick={() => handleStartAssignment(assignment.id)}
-                                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <FileText size={18} />
-                                        Start Assignment
-                                    </button>
+                                    {results[assignment.id] ? (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
+                                                <div className="flex items-center gap-3">
+                                                    <CheckCircle className="text-green-600" size={24} />
+                                                    <div>
+                                                        <p className="font-bold text-green-900">Completed</p>
+                                                        <p className="text-sm text-green-700">
+                                                            Score: {results[assignment.id].score}/{results[assignment.id].maxScore} 
+                                                            ({Math.round(results[assignment.id].percentage || 0)}%)
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleViewResult(assignment.id)}
+                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                                                >
+                                                    View Results
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleStartAssignment(assignment.id)}
+                                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <FileText size={18} />
+                                            Start Assignment
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Results Modal */}
+            {viewingResult && viewingAssignment && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl my-8">
+                        {/* Modal Header */}
+                        <div className="sticky top-0 bg-gradient-to-r from-green-500 to-emerald-600 p-6 rounded-t-2xl">
+                            <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <Award className="text-white" size={32} />
+                                        <h2 className="text-2xl font-bold text-white">{viewingAssignment.title}</h2>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-green-50">
+                                        <span>Completed {new Date(viewingResult.completedAt).toLocaleDateString()}</span>
+                                        <span>•</span>
+                                        <span className="font-bold text-white">
+                                            Score: {viewingResult.score}/{viewingResult.maxScore} ({Math.round(viewingResult.percentage || 0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setViewingResult(null);
+                                        setViewingAssignment(null);
+                                    }}
+                                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Overall Feedback */}
+                        {viewingResult.feedback && (
+                            <div className="p-6 border-b border-slate-200 bg-slate-50">
+                                <h3 className="text-lg font-bold text-slate-900 mb-2">Overall Feedback</h3>
+                                <p className="text-slate-700 whitespace-pre-wrap">{viewingResult.feedback}</p>
+                            </div>
+                        )}
+
+                        {/* Detailed Results */}
+                        <div className="p-6">
+                            <h3 className="text-lg font-bold text-slate-900 mb-4">Question-by-Question Breakdown</h3>
+                            <div className="space-y-4">
+                                {viewingResult.detailedResults && viewingResult.detailedResults.length > 0 ? (
+                                    viewingResult.detailedResults.map((result: any, index: number) => (
+                                        <div key={index} className="bg-white border border-slate-200 rounded-xl p-5">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <h4 className="font-bold text-slate-900">Question {result.questionNumber}</h4>
+                                                <span className={`px-3 py-1 rounded-lg font-bold text-sm ${
+                                                    result.marksAwarded === result.maxMarks 
+                                                        ? 'bg-green-100 text-green-700' 
+                                                        : result.marksAwarded >= result.maxMarks * 0.6
+                                                        ? 'bg-amber-100 text-amber-700'
+                                                        : 'bg-red-100 text-red-700'
+                                                }`}>
+                                                    {result.marksAwarded}/{result.maxMarks} marks
+                                                </span>
+                                            </div>
+                                            
+                                            {result.feedback && (
+                                                <div className="mb-3">
+                                                    <p className="text-sm font-semibold text-slate-600 mb-1">Feedback:</p>
+                                                    <p className="text-slate-700 text-sm">{result.feedback}</p>
+                                                </div>
+                                            )}
+                                            
+                                            {result.strengths && (
+                                                <div className="mb-2 p-3 bg-green-50 rounded-lg">
+                                                    <p className="text-xs font-bold text-green-800 mb-1">✓ Strengths</p>
+                                                    <p className="text-sm text-green-900">{result.strengths}</p>
+                                                </div>
+                                            )}
+                                            
+                                            {result.improvements && (
+                                                <div className="p-3 bg-blue-50 rounded-lg">
+                                                    <p className="text-xs font-bold text-blue-800 mb-1">💡 Areas for Improvement</p>
+                                                    <p className="text-sm text-blue-900">{result.improvements}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-slate-500">
+                                        <p>Detailed feedback not available</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    setViewingResult(null);
+                                    setViewingAssignment(null);
+                                }}
+                                className="w-full mt-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
