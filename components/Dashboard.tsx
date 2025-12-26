@@ -142,14 +142,14 @@ const Dashboard: React.FC = () => {
                         )}
                         <div
                             onClick={() => setShowProfileModal(true)}
-                            className="flex items-center gap-2 text-sm font-bold text-gray-800 bg-white border border-gray-200 pl-1 pr-3 py-1 rounded-full shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
+                            className="flex items-center gap-2 text-sm font-bold text-gray-800 bg-white border border-gray-200 px-3 py-1.5 rounded-full shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
                         >
                             <img
                                 src={user?.photoURL || profileIcon}
                                 alt="Profile"
-                                className="w-9 h-9 rounded-full border-2 border-gray-200 object-cover"
+                                className="w-8 h-8 rounded-full border-2 border-gray-200 object-cover"
                             />
-                            <span className="hidden sm:inline">{user?.displayName || user?.email}</span>
+                            <span className="max-w-[120px] truncate">{user?.displayName || user?.email?.split('@')[0] || 'Student'}</span>
                         </div>
                     </div>
                 </div>
