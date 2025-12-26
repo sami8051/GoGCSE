@@ -674,6 +674,13 @@ app.post('/api/generate-practice-set', authenticateUser, async (req, res) => {
             - Questions should be challenging but fair for the ${difficulty} level
             - MUST provide detailed marking guidance/answer key for each question
             
+            CRITICAL FORMATTING RESTRICTION:
+            - DO NOT require text formatting (underlining, bold, italics) in questions
+            - Students use plain text input on mobile devices
+            - Instead of "underline the metaphors", use: "identify the metaphors by writing them in CAPITAL LETTERS" or "list the metaphors separately"
+            - Example: "Write a paragraph using three metaphors. After your paragraph, list your three metaphors on separate lines."
+            - Make all questions compatible with plain textarea input
+            
             Difficulty Guidelines:
             - Easy/Foundation: Focus on retrieval, basic comprehension, simple analysis
             - Medium/Standard: Mix of retrieval, analysis, some evaluation

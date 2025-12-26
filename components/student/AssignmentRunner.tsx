@@ -203,6 +203,13 @@ const AssignmentRunner: React.FC = () => {
 
                         <div className="prose prose-slate max-w-none mb-6">
                             <p className="whitespace-pre-wrap text-slate-800 text-lg leading-relaxed">{q.text}</p>
+                            {q.guidance && (
+                                <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+                                    <p className="text-sm text-blue-900 font-medium">
+                                        💡 Tip: {q.guidance}
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         <textarea
