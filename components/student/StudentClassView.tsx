@@ -239,24 +239,36 @@ const StudentClassView: React.FC = () => {
 
                                     {results[assignment.id] ? (
                                         <div className="space-y-3">
-                                            <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
-                                                <div className="flex items-center gap-3">
-                                                    <CheckCircle className="text-green-600" size={24} />
-                                                    <div>
-                                                        <p className="font-bold text-green-900">Completed</p>
-                                                        <p className="text-sm text-green-700">
-                                                            Score: {results[assignment.id].score}/{results[assignment.id].maxScore} 
-                                                            ({Math.round(results[assignment.id].percentage || 0)}%)
-                                                        </p>
+                                            {results[assignment.id].markingStatus === 'complete' ? (
+                                                <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
+                                                    <div className="flex items-center gap-3">
+                                                        <CheckCircle className="text-green-600" size={24} />
+                                                        <div>
+                                                            <p className="font-bold text-green-900">Completed & Marked</p>
+                                                            <p className="text-sm text-green-700">
+                                                                Score: {results[assignment.id].score}/{results[assignment.id].maxScore} 
+                                                                ({Math.round(results[assignment.id].percentage || 0)}%)
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleViewResult(assignment.id)}
+                                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                                                    >
+                                                        View Results
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                                                    <div className="flex items-center gap-3">
+                                                        <Clock className="text-amber-600" size={24} />
+                                                        <div>
+                                                            <p className="font-bold text-amber-900">Submitted</p>
+                                                            <p className="text-sm text-amber-700">Awaiting teacher feedback</p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <button
-                                                    onClick={() => handleViewResult(assignment.id)}
-                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
-                                                >
-                                                    View Results
-                                                </button>
-                                            </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <button

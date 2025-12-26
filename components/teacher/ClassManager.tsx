@@ -4,6 +4,7 @@ import { db } from '../../services/firebase';
 import { doc, getDoc, collection, getDocs, query, where, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Classroom, ClassMember, Assignment } from '../../types';
 import { Users, FileText, ArrowLeft, Trash2, Clock, CheckCircle, Eye, Edit2, X, Award, TrendingUp } from 'lucide-react';
+import { GeminiService } from '../../services/geminiService';
 
 interface AssignmentResult {
     id: string;
@@ -35,6 +36,7 @@ const ClassManager: React.FC = () => {
     const [viewingSubmissions, setViewingSubmissions] = useState<Assignment | null>(null);
     const [submissions, setSubmissions] = useState<AssignmentResult[]>([]);
     const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+    const [markingAll, setMarkingAll] = useState(false);
     const [selectedResult, setSelectedResult] = useState<AssignmentResult | null>(null);
 
     useEffect(() => {
@@ -175,6 +177,54 @@ const ClassManager: React.FC = () => {
             alert("Failed to load submissions.");
         }
         setLoadingSubmissions(false);
+    };
+
+    const handleMarkAllSubmissions = async () => {
+        if (!viewingSubmissions) return;
+        
+        const pendingSubmissions = submissions.filter(s => s.markingStatus === 'pending');
+        if (pendingSubmissions.length === 0) {
+            alert("All submissions have already been marked!");
+            return;
+        }
+
+        if (!window.confirm(`This will use AI to mark ${pendingSubmissions.length} pending submission(s). Continue?`)) return;
+
+        setMarkingAll(true);
+        const gemini = new GeminiService();
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const submission of pendingSubmissions) {
+            try {
+                // Extract student answers
+                const studentAnswers = submission.answers?.map((a: any) => a.text || '') || [];
+                
+                // Call AI marking service
+                const markingResult = await gemini.markAssignment(viewingSubmissions.id!, studentAnswers);
+
+                // Update result in Firestore
+                await updateDoc(doc(db, 'assignment_results', submission.id), {
+                    score: markingResult.totalMarks,
+                    percentage: markingResult.percentage,
+                    feedback: markingResult.overallFeedback,
+                    detailedResults: markingResult.results,
+                    markingStatus: 'complete',
+                    markedAt: Date.now()
+                });
+
+                successCount++;
+            } catch (error) {
+                console.error(`Failed to mark submission ${submission.id}:`, error);
+                failCount++;
+            }
+        }
+
+        setMarkingAll(false);
+        alert(`Marking complete!\n\n✅ Successfully marked: ${successCount}\n❌ Failed: ${failCount}`);
+        
+        // Reload submissions
+        await handleViewSubmissions(viewingSubmissions);
     };
 
     if (loading) return <div className="p-12 text-center text-slate-500">Loading class details...</div>;
@@ -542,21 +592,38 @@ const ClassManager: React.FC = () => {
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
                     <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl my-8">
                         {/* Modal Header */}
-                        <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex justify-between items-start">
-                            <div className="flex-1">
-                                <h2 className="text-2xl font-bold text-slate-900 mb-1">{viewingSubmissions.title} - Submissions</h2>
-                                <p className="text-slate-500">Total Submissions: {submissions.length}</p>
+                        <div className="sticky top-0 bg-white border-b border-slate-200 p-6">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex-1">
+                                    <h2 className="text-2xl font-bold text-slate-900 mb-1">{viewingSubmissions.title} - Submissions</h2>
+                                    <p className="text-slate-500">Total Submissions: {submissions.length} | Pending: {submissions.filter(s => s.markingStatus === 'pending').length}</p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setViewingSubmissions(null);
+                                        setSubmissions([]);
+                                        setSelectedResult(null);
+                                    }}
+                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                >
+                                    <X size={24} />
+                                </button>
                             </div>
-                            <button
-                                onClick={() => {
-                                    setViewingSubmissions(null);
-                                    setSubmissions([]);
-                                    setSelectedResult(null);
-                                }}
-                                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                            >
-                                <X size={24} />
-                            </button>
+                            
+                            {/* Mark All Button */}
+                            {submissions.some(s => s.markingStatus === 'pending') && (
+                                <button
+                                    onClick={handleMarkAllSubmissions}
+                                    disabled={markingAll}
+                                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {markingAll ? (
+                                        <>⏳ Marking in progress...</>
+                                    ) : (
+                                        <>🤖 Mark All Pending with AI ({submissions.filter(s => s.markingStatus === 'pending').length})</>
+                                    )}
+                                </button>
+                            )}
                         </div>
 
                         {/* Submissions List */}
@@ -585,20 +652,28 @@ const ClassManager: React.FC = () => {
                                                                 <Clock size={14} />
                                                                 Submitted {new Date(result.completedAt).toLocaleDateString()}
                                                             </span>
-                                                            <span className="flex items-center gap-1">
-                                                                <Award size={14} />
-                                                                {result.score}/{result.maxScore} ({Math.round(result.percentage || 0)}%)
-                                                            </span>
-                                                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                                                (result.percentage || 0) >= 80 ? 'bg-green-100 text-green-700' :
-                                                                (result.percentage || 0) >= 60 ? 'bg-blue-100 text-blue-700' :
-                                                                (result.percentage || 0) >= 40 ? 'bg-amber-100 text-amber-700' :
-                                                                'bg-red-100 text-red-700'
-                                                            }`}>
-                                                                {(result.percentage || 0) >= 80 ? 'Excellent' :
-                                                                 (result.percentage || 0) >= 60 ? 'Good' :
-                                                                 (result.percentage || 0) >= 40 ? 'Pass' : 'Needs Improvement'}
-                                                            </span>
+                                                            {result.markingStatus === 'complete' ? (
+                                                                <>
+                                                                    <span className="flex items-center gap-1">
+                                                                        <Award size={14} />
+                                                                        {result.score}/{result.maxScore} ({Math.round(result.percentage || 0)}%)
+                                                                    </span>
+                                                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                                                        (result.percentage || 0) >= 80 ? 'bg-green-100 text-green-700' :
+                                                                        (result.percentage || 0) >= 60 ? 'bg-blue-100 text-blue-700' :
+                                                                        (result.percentage || 0) >= 40 ? 'bg-amber-100 text-amber-700' :
+                                                                        'bg-red-100 text-red-700'
+                                                                    }`}>
+                                                                        {(result.percentage || 0) >= 80 ? 'Excellent' :
+                                                                         (result.percentage || 0) >= 60 ? 'Good' :
+                                                                         (result.percentage || 0) >= 40 ? 'Pass' : 'Needs Improvement'}
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-700">
+                                                                    ⏳ Pending Review
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

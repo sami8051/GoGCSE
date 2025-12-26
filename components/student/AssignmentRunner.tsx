@@ -127,52 +127,20 @@ const AssignmentRunner: React.FC = () => {
                 classId: assignment.classId,
                 studentId: auth.currentUser.uid,
                 studentName: auth.currentUser.displayName || 'Student',
-                score: 0, // Will be updated after marking
+                score: 0, // Will be updated when teacher marks
                 maxScore: assignment.questions.reduce((sum, q) => sum + q.marks, 0),
                 answers: answersArray,
                 completedAt: Date.now(),
-                feedback: "AI is marking your assignment...",
+                feedback: "Awaiting teacher feedback",
                 timeSpent: Math.floor((Date.now() - startTime) / 1000),
                 markingStatus: 'pending'
             });
 
-            // Auto-mark the assignment using AI
-            try {
-                const gemini = new GeminiService();
-                const markingResult = await gemini.markAssignment(assignment.id!, studentAnswersText);
-
-                // Update result with marking data
-                await updateDoc(doc(db, 'assignment_results', resultRef.id), {
-                    score: markingResult.totalMarks,
-                    percentage: markingResult.percentage,
-                    feedback: markingResult.overallFeedback,
-                    detailedResults: markingResult.results,
-                    markingStatus: 'complete',
-                    markedAt: Date.now()
-                });
-
-                if (autoSubmit) {
-                    alert(`Time's up! Your assignment has been auto-marked.\n\nScore: ${markingResult.totalMarks}/${markingResult.totalPossible} (${Math.round(markingResult.percentage)}%)`);
-                } else {
-                    alert(`Assignment submitted and marked!
-
-Score: ${markingResult.totalMarks}/${markingResult.totalPossible} (${Math.round(markingResult.percentage)}%)
-
-Check your results for detailed feedback.`);
-                }
-            } catch (markingError) {
-                console.error("Auto-marking failed:", markingError);
-                // Update with error status
-                await updateDoc(doc(db, 'assignment_results', resultRef.id), {
-                    feedback: "Auto-marking failed. Teacher will review manually.",
-                    markingStatus: 'failed'
-                });
-                
-                if (autoSubmit) {
-                    alert("Time's up! Your assignment has been submitted (marking pending).");
-                } else {
-                    alert("Assignment submitted! Auto-marking failed, your teacher will review it.");
-                }
+            // Show success message
+            if (autoSubmit) {
+                alert("Time's up! Your assignment has been submitted.\n\nYour teacher will review and provide feedback.");
+            } else {
+                alert("Assignment submitted successfully!\n\nYour teacher will review your work and provide feedback soon.");
             }
 
             navigate('/student/classroom');
