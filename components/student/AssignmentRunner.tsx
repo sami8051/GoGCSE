@@ -71,15 +71,20 @@ const AssignmentRunner: React.FC = () => {
     };
 
     const handleAnswerChange = (questionId: string, text: string) => {
-        setAnswers(prev => ({
-            ...prev,
-            [questionId]: {
-                questionId,
-                text,
-                timestamp: Date.now(),
-                isFlagged: false
-            }
-        }));
+        console.log('[AssignmentRunner] Answer change - Question ID:', questionId, 'Text:', text);
+        setAnswers(prev => {
+            const updated = {
+                ...prev,
+                [questionId]: {
+                    questionId,
+                    text,
+                    timestamp: Date.now(),
+                    isFlagged: false
+                }
+            };
+            console.log('[AssignmentRunner] Updated answers:', updated);
+            return updated;
+        });
     };
 
     const formatTime = (seconds: number) => {
@@ -252,8 +257,12 @@ const AssignmentRunner: React.FC = () => {
 
             {/* Questions */}
             <div className="max-w-4xl mx-auto p-6 space-y-8 mt-6">
-                {assignment.questions.map((q, index) => (
-                    <div key={q.id || index} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                {assignment.questions.map((q, index) => {
+                    const questionKey = q.id || q.number || index.toString();
+                    console.log(`[AssignmentRunner] Rendering Question ${index + 1}:`, { id: q.id, number: q.number, key: questionKey });
+                    
+                    return (
+                    <div key={questionKey} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="text-lg font-bold text-slate-900">Question {index + 1}</h3>
                             <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded text-sm font-medium">{q.marks} Marks</span>
@@ -271,14 +280,15 @@ const AssignmentRunner: React.FC = () => {
                         </div>
 
                         <textarea
-                            value={answers[q.id]?.text || ''}
-                            onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                            value={answers[questionKey]?.text || ''}
+                            onChange={(e) => handleAnswerChange(questionKey, e.target.value)}
                             placeholder="Type your answer here..."
                             rows={6}
                             className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none focus:bg-white transition-all text-slate-900 leading-relaxed resize-y"
                         />
                     </div>
-                ))}
+                );
+                })}
             </div>
         </div>
     );
