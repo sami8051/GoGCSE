@@ -81,6 +81,10 @@ service cloud.firestore {
       match /enrolled_classes/{classId} {
         // Users can read/write their own enrolled classes
         allow read, write: if request.auth != null && request.auth.uid == userId;
+        // Teachers can delete if they own the class (for removing students)
+        allow delete: if isTeacher() && 
+          exists(/databases/$(database)/documents/classes/$(classId)) &&
+          get(/databases/$(database)/documents/classes/$(classId)).data.teacherId == request.auth.uid;
         // Admin can access all
         allow read, write: if isAdmin();
       }
@@ -204,10 +208,14 @@ service cloud.firestore {
          exists(/databases/$(database)/documents/assignments/$(resource.data.assignmentId)) &&
          get(/databases/$(database)/documents/assignments/$(resource.data.assignmentId)).data.teacherId == request.auth.uid)
       ); 
-      // Student can update their own, admin can update any
+      // Student can update their own, admin can update any, teacher can update results for their assignments
       allow update: if request.auth != null && (
         (resource.data.studentId == request.auth.uid && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['gradedBy', 'finalScore'])) ||
-        isAdmin()
+        isAdmin() ||
+        // Teacher can update if they own the assignment
+        (isTeacher() && 
+         exists(/databases/$(database)/documents/assignments/$(resource.data.assignmentId)) &&
+         get(/databases/$(database)/documents/assignments/$(resource.data.assignmentId)).data.teacherId == request.auth.uid)
       );
     }
 
