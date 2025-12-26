@@ -141,9 +141,9 @@ const AssignmentRunner: React.FC = () => {
             );
             
             // Prepare submission data with proper validation
-            const submissionData = {
+            const submissionData: any = {
                 assignmentId: assignment.id,
-                classId: assignment.classId || null,  // Ensure not undefined
+                classId: assignment.classId || null,
                 studentId: auth.currentUser.uid,
                 studentName: auth.currentUser.displayName || 'Student',
                 score: 0,
@@ -155,7 +155,28 @@ const AssignmentRunner: React.FC = () => {
                 markingStatus: 'pending'
             };
             
-            console.log('[AssignmentRunner] Submission data:', submissionData);
+            // Remove any undefined values
+            Object.keys(submissionData).forEach(key => {
+                if (submissionData[key] === undefined) {
+                    console.warn(`[AssignmentRunner] Removing undefined field: ${key}`);
+                    delete submissionData[key];
+                }
+            });
+            
+            // Also check answers array for undefined values
+            submissionData.answers = submissionData.answers.map((answer: any) => {
+                const cleanAnswer: any = {};
+                Object.keys(answer).forEach(key => {
+                    if (answer[key] !== undefined) {
+                        cleanAnswer[key] = answer[key];
+                    } else {
+                        console.warn(`[AssignmentRunner] Removing undefined in answer.${key}`);
+                    }
+                });
+                return cleanAnswer;
+            });
+            
+            console.log('[AssignmentRunner] Submission data:', JSON.stringify(submissionData, null, 2));
 
             // Save initial result
             const resultRef = await addDoc(collection(db, 'assignment_results'), submissionData);
