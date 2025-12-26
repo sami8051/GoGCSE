@@ -175,30 +175,35 @@ const StudentClassView: React.FC = () => {
             </header>
 
             {/* Main Content */}
-            <div className="p-8">
-            <div className="max-w-6xl mx-auto">
+            <div className="p-6">
+            <div className="max-w-5xl mx-auto">
 
                 {/* Class Info */}
-                <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 mb-8">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold text-slate-900 mb-2">{classroom?.name}</h1>
-                            <div className="flex items-center gap-4 text-sm text-slate-500">
-                                <span className="flex items-center gap-1">
-                                    <BookOpen size={16} />
-                                    {classroom?.config?.subject || 'English Language'}
-                                </span>
-                                {classroom?.config?.yearGroup && (
-                                    <>
-                                        <span>•</span>
-                                        <span>{classroom.config.yearGroup}</span>
-                                    </>
-                                )}
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-lg mb-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                                <BookOpen className="text-white" size={32} />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-white mb-1">{classroom?.name}</h1>
+                                <div className="flex items-center gap-3 text-indigo-100">
+                                    <span className="flex items-center gap-1 text-sm">
+                                        <BookOpen size={14} />
+                                        {classroom?.config?.subject || 'English Language'}
+                                    </span>
+                                    {classroom?.config?.yearGroup && (
+                                        <>
+                                            <span>•</span>
+                                            <span className="text-sm">{classroom.config.yearGroup}</span>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <p className="text-xs text-slate-400 uppercase tracking-wide mb-1">Class Code</p>
-                            <code className="text-lg font-mono font-bold text-slate-900 tracking-widest bg-slate-100 px-3 py-1 rounded">
+                        <div className="text-right bg-white/10 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/20">
+                            <p className="text-xs text-indigo-200 uppercase tracking-wide mb-1 font-semibold">Class Code</p>
+                            <code className="text-xl font-mono font-bold text-white tracking-widest">
                                 {classroom?.inviteCode}
                             </code>
                         </div>
@@ -207,71 +212,72 @@ const StudentClassView: React.FC = () => {
 
                 {/* Assignments List */}
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-6">Assignments</h2>
+                    <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <FileText size={24} className="text-indigo-600" />
+                        Assignments
+                    </h2>
 
                     {assignments.length === 0 ? (
-                        <div className="bg-white rounded-2xl p-12 border border-dashed border-slate-300 text-center">
-                            <FileText size={48} className="mx-auto text-slate-300 mb-4" />
-                            <h3 className="text-lg font-bold text-slate-600 mb-2">No assignments yet</h3>
+                        <div className="bg-white rounded-2xl p-12 border-2 border-dashed border-slate-300 text-center">
+                            <FileText size={56} className="mx-auto text-slate-300 mb-4" />
+                            <h3 className="text-xl font-bold text-slate-600 mb-2">No assignments yet</h3>
                             <p className="text-slate-400">
                                 Your teacher hasn't posted any assignments for this class.
                             </p>
                         </div>
                     ) : (
-                        <div className="grid gap-4">
+                        <div className="space-y-4">
                             {assignments.map((assignment) => (
                                 <div
                                     key={assignment.id}
-                                    className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-indigo-200 hover:shadow-md transition-all group"
+                                    className="bg-white rounded-xl p-5 border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-200"
                                 >
-                                    <div className="flex justify-between items-start mb-4">
+                                    <div className="flex justify-between items-start mb-3">
                                         <div className="flex-1">
-                                            <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">
+                                            <h3 className="text-lg font-bold text-slate-900 mb-2">
                                                 {assignment.title}
                                             </h3>
-                                            <div className="flex items-center gap-4 text-sm text-slate-500">
-                                                <span className="flex items-center gap-1">
-                                                    <FileText size={14} />
+                                            <div className="flex flex-wrap items-center gap-3 text-xs">
+                                                <span className="flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 rounded-md font-medium">
+                                                    <FileText size={12} />
                                                     {assignment.questions?.length || 0} Questions
                                                 </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Clock size={14} />
-                                                    Added {new Date(assignment.createdAt || Date.now()).toLocaleDateString()}
+                                                <span className="flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 rounded-md font-medium">
+                                                    <Clock size={12} />
+                                                    {new Date(assignment.createdAt || Date.now()).toLocaleDateString()}
                                                 </span>
                                                 {assignment.settings?.timeLimitMinutes && (
-                                                    <>
-                                                        <span>•</span>
-                                                        <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 rounded text-xs font-medium">
-                                                            {assignment.settings.timeLimitMinutes} min limit
-                                                        </span>
-                                                    </>
+                                                    <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md font-semibold">
+                                                        ⏱️ {assignment.settings.timeLimitMinutes} min
+                                                    </span>
                                                 )}
                                                 {assignment.settings?.difficulty && (
-                                                    <>
-                                                        <span>•</span>
-                                                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs font-medium">
-                                                            {assignment.settings.difficulty}
-                                                        </span>
-                                                    </>
+                                                    <span className={`px-2 py-1 rounded-md font-semibold ${
+                                                        assignment.settings.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                                                        assignment.settings.difficulty === 'medium' ? 'bg-amber-100 text-amber-700' :
+                                                        'bg-red-100 text-red-700'
+                                                    }`}>
+                                                        {assignment.settings.difficulty.charAt(0).toUpperCase() + assignment.settings.difficulty.slice(1)}
+                                                    </span>
                                                 )}
                                             </div>
                                             {assignment.settings?.topic && (
-                                                <p className="text-sm text-slate-600 mt-2">
-                                                    <span className="font-medium">Topic:</span> {assignment.settings.topic}
+                                                <p className="text-sm text-slate-600 mt-2 flex items-center gap-1">
+                                                    <span className="font-semibold">📚 Topic:</span> {assignment.settings.topic}
                                                 </p>
                                             )}
                                         </div>
                                     </div>
 
                                     {results[assignment.id] ? (
-                                        <div className="space-y-3">
+                                        <div className="space-y-2">
                                             {results[assignment.id].markingStatus === 'complete' ? (
-                                                <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
-                                                    <div className="flex items-center gap-3">
-                                                        <CheckCircle className="text-green-600" size={24} />
+                                                <div className="flex items-center justify-between p-3 bg-green-50 border-2 border-green-200 rounded-lg">
+                                                    <div className="flex items-center gap-2">
+                                                        <CheckCircle className="text-green-600" size={20} />
                                                         <div>
-                                                            <p className="font-bold text-green-900">Completed & Marked</p>
-                                                            <p className="text-sm text-green-700">
+                                                            <p className="font-bold text-green-900 text-sm">Completed & Marked</p>
+                                                            <p className="text-xs text-green-700">
                                                                 Score: {results[assignment.id].score}/{results[assignment.id].maxScore} 
                                                                 ({Math.round(results[assignment.id].percentage || 0)}%)
                                                             </p>
@@ -279,18 +285,18 @@ const StudentClassView: React.FC = () => {
                                                     </div>
                                                     <button
                                                         onClick={() => handleViewResult(assignment.id)}
-                                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors"
                                                     >
                                                         View Results
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                                                    <div className="flex items-center gap-3">
-                                                        <Clock className="text-amber-600" size={24} />
+                                                <div className="p-3 bg-amber-50 border-2 border-amber-200 rounded-lg">
+                                                    <div className="flex items-center gap-2">
+                                                        <Clock className="text-amber-600" size={20} />
                                                         <div>
-                                                            <p className="font-bold text-amber-900">Submitted</p>
-                                                            <p className="text-sm text-amber-700">Awaiting teacher feedback</p>
+                                                            <p className="font-bold text-amber-900 text-sm">Submitted</p>
+                                                            <p className="text-xs text-amber-700">Awaiting teacher feedback</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -299,9 +305,9 @@ const StudentClassView: React.FC = () => {
                                     ) : (
                                         <button
                                             onClick={() => handleStartAssignment(assignment.id)}
-                                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                                            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                                         >
-                                            <FileText size={18} />
+                                            <FileText size={16} />
                                             Start Assignment
                                         </button>
                                     )}
