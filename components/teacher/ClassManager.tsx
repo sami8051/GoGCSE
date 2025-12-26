@@ -217,7 +217,15 @@ const ClassManager: React.FC = () => {
                 console.log('Extracted student answers:', studentAnswers);
                 
                 if (studentAnswers.length === 0 || studentAnswers.every(a => !a)) {
-                    throw new Error('No answers found in submission');
+                    // Mark as failed - no answers to mark
+                    await updateDoc(doc(db, 'assignment_results', submission.id), {
+                        score: 0,
+                        percentage: 0,
+                        feedback: "No answers provided. Student submitted without answering questions.",
+                        markingStatus: 'complete',
+                        markedAt: Date.now()
+                    });
+                    throw new Error('No answers provided by student');
                 }
                 
                 // Call AI marking service
