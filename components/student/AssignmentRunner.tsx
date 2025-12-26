@@ -171,16 +171,17 @@ const AssignmentRunner: React.FC = () => {
             // Also check answers array for undefined values
             submissionData.answers = submissionData.answers.map((answer: any) => {
                 const cleanAnswer: any = {};
-                Object.keys(answer).forEach(key => {
-                    if (answer[key] !== undefined) {
+                Object.keys(answer || {}).forEach(key => {
+                    if (answer[key] !== undefined && answer[key] !== null) {
                         cleanAnswer[key] = answer[key];
                     } else {
-                        console.warn(`[AssignmentRunner] Removing undefined in answer.${key}`);
+                        console.warn(`[AssignmentRunner] Removing undefined/null in answer.${key}:`, answer[key]);
                     }
                 });
                 return cleanAnswer;
-            });
+            }).filter((answer: any) => Object.keys(answer).length > 0); // Remove empty answer objects
             
+            console.log('[AssignmentRunner] Cleaned answers:', submissionData.answers);
             console.log('[AssignmentRunner] Submission data:', JSON.stringify(submissionData, null, 2));
 
             // Save initial result
