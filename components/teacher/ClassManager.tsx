@@ -90,6 +90,27 @@ const ClassManager: React.FC = () => {
         }
     };
 
+    const handleRemoveStudent = async (studentUid: string, studentName: string) => {
+        if (!classId) return;
+        if (!window.confirm(`Are you sure you want to remove ${studentName} from this class?`)) return;
+        
+        try {
+            // 1. Remove from class/members subcollection
+            await deleteDoc(doc(db, 'classes', classId, 'members', studentUid));
+            
+            // 2. Remove from user's enrolled_classes subcollection
+            await deleteDoc(doc(db, 'users', studentUid, 'enrolled_classes', classId));
+            
+            // 3. Update local state
+            setMembers(prev => prev.filter(m => m.uid !== studentUid));
+            
+            alert(`${studentName} has been removed from the class.`);
+        } catch (error: any) {
+            console.error("Error removing student:", error);
+            alert(`Failed to remove student: ${error.message}`);
+        }
+    };
+
     const handleViewAssignment = (assignment: Assignment) => {
         setViewingAssignment(assignment);
         setNewTitle(assignment.title || '');
@@ -417,7 +438,12 @@ const ClassManager: React.FC = () => {
                                         {student.joinedAt ? new Date(student.joinedAt).toLocaleDateString() : 'Unknown'}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <button className="text-red-400 hover:text-red-600 text-sm font-medium">Remove</button>
+                                        <button 
+                                            onClick={() => handleRemoveStudent(student.uid, student.displayName || 'Unknown Student')}
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                                        >
+                                            Remove
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
