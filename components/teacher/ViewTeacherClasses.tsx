@@ -11,6 +11,7 @@ const ViewTeacherClasses: React.FC = () => {
     const [classes, setClasses] = useState<Classroom[]>([]);
     const [loading, setLoading] = useState(true);
     const [teacherName, setTeacherName] = useState<string>('');
+    const [classMemberCounts, setClassMemberCounts] = useState<Record<string, number>>({});
     const targetIsSelf = !teacherId || (auth.currentUser && teacherId === auth.currentUser.uid);
     const effectiveTeacherId = teacherId || auth.currentUser?.uid;
 
@@ -35,6 +36,14 @@ const ViewTeacherClasses: React.FC = () => {
             const snapshot = await getDocs(q);
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Classroom));
             setClasses(data.sort((a, b) => b.createdAt - a.createdAt));
+
+            // Load actual member counts from subcollections
+            const counts: Record<string, number> = {};
+            for (const classDoc of data) {
+                const membersSnapshot = await getDocs(collection(db, 'classes', classDoc.id, 'members'));
+                counts[classDoc.id] = membersSnapshot.size;
+            }
+            setClassMemberCounts(counts);
         } catch (error) {
             console.error("Error loading teacher classes:", error);
         }
@@ -95,7 +104,7 @@ const ViewTeacherClasses: React.FC = () => {
                                         {cls.name}
                                     </h3>
                                     <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wide">
-                                        {cls.studentCount || 0} Students
+                                        {classMemberCounts[cls.id] || 0} Students
                                     </span>
                                 </div>
 

@@ -12,6 +12,7 @@ const TeacherDashboard: React.FC = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newClassName, setNewClassName] = useState("");
     const [isAdmin, setIsAdmin] = useState(false);
+    const [classMemberCounts, setClassMemberCounts] = useState<Record<string, number>>({});
 
     // Config State
     const [subject, setSubject] = useState("English Language");
@@ -48,6 +49,14 @@ const TeacherDashboard: React.FC = () => {
             const snapshot = await getDocs(q);
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Classroom));
             setClasses(data.sort((a, b) => b.createdAt - a.createdAt));
+
+            // Load actual member counts from subcollections
+            const counts: Record<string, number> = {};
+            for (const classDoc of data) {
+                const membersSnapshot = await getDocs(collection(db, 'classes', classDoc.id, 'members'));
+                counts[classDoc.id] = membersSnapshot.size;
+            }
+            setClassMemberCounts(counts);
         } catch (error) {
             console.error("Error loading classes:", error);
         }
@@ -162,7 +171,7 @@ const TeacherDashboard: React.FC = () => {
                                         <Trash2 size={18} />
                                     </button>
                                     <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wide">
-                                            {cls.studentCount} Students
+                                            {classMemberCounts[cls.id] || 0} Students
                                         </span>
                                 </div>
 
