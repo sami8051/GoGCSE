@@ -109,10 +109,10 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ result, paper, answ
         <div className="flex gap-2 md:gap-3">
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 bg-edexcel-dark text-white px-3 py-2 rounded-lg font-bold hover:bg-gray-800 transition-colors shadow-sm text-xs md:text-sm"
+            className="flex items-center gap-2 bg-edexcel-blue text-white px-4 py-2.5 rounded-lg font-bold hover:bg-edexcel-dark transition-colors shadow-md text-sm md:text-base"
           >
-            <Printer size={16} /> <span className="hidden sm:inline">Print PDF</span>
-            <span className="sm:hidden">PDF</span>
+            <Printer size={18} /> 
+            <span>Print PDF</span>
           </button>
         </div>
       </nav>
