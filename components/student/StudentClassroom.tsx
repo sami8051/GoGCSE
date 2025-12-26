@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../../services/firebase';
 import { collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { Classroom, Assignment } from '../../types';
-import { Users, FileText, ArrowRight, BookOpen, Search } from 'lucide-react';
+import { Users, FileText, ArrowRight, BookOpen, Search, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const StudentClassroom: React.FC = () => {
@@ -141,6 +141,14 @@ const StudentClassroom: React.FC = () => {
 
     return (
         <div className="p-8 max-w-6xl mx-auto">
+            <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors mb-6 font-medium"
+            >
+                <ArrowLeft size={18} />
+                Back to Dashboard
+            </button>
+            
             <h1 className="text-3xl font-bold text-slate-900 mb-8">My Classroom</h1>
 
             <div className="grid md:grid-cols-3 gap-8">
