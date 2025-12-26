@@ -263,14 +263,14 @@ const AssignmentBuilder: React.FC = () => {
                             <div className="flex gap-3 pt-4 border-t border-slate-100">
                                 <button
                                     onClick={handleGenerate}
-                                    className="flex-1 py-3 border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 border-2 border-slate-300 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
                                 >
                                     <RefreshCw size={18} /> Regenerate
                                 </button>
                                 <button
                                     onClick={handleSaveAssignment}
                                     disabled={isSaving}
-                                    className="flex-[2] py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     <Save size={18} /> {isSaving ? 'Saving...' : 'Approve & Save Assignment'}
                                 </button>
