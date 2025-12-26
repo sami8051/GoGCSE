@@ -194,14 +194,26 @@ const ClassManager: React.FC = () => {
         const gemini = new GeminiService();
         let successCount = 0;
         let failCount = 0;
+        const errors: string[] = [];
 
         for (const submission of pendingSubmissions) {
             try {
+                console.log('Marking submission:', submission.id);
+                console.log('Student:', submission.studentName);
+                console.log('Assignment ID:', viewingSubmissions.id);
+                
                 // Extract student answers
                 const studentAnswers = submission.answers?.map((a: any) => a.text || '') || [];
+                console.log('Student answers:', studentAnswers);
+                
+                if (studentAnswers.length === 0) {
+                    throw new Error('No answers found in submission');
+                }
                 
                 // Call AI marking service
+                console.log('Calling AI marking service...');
                 const markingResult = await gemini.markAssignment(viewingSubmissions.id!, studentAnswers);
+                console.log('Marking result:', markingResult);
 
                 // Update result in Firestore
                 await updateDoc(doc(db, 'assignment_results', submission.id), {
@@ -213,15 +225,23 @@ const ClassManager: React.FC = () => {
                     markedAt: Date.now()
                 });
 
+                console.log('Successfully marked:', submission.studentName);
                 successCount++;
-            } catch (error) {
+            } catch (error: any) {
                 console.error(`Failed to mark submission ${submission.id}:`, error);
+                const errorMsg = error.message || 'Unknown error';
+                errors.push(`${submission.studentName}: ${errorMsg}`);
                 failCount++;
             }
         }
 
         setMarkingAll(false);
-        alert(`Marking complete!\n\n✅ Successfully marked: ${successCount}\n❌ Failed: ${failCount}`);
+        
+        let message = `Marking complete!\n\n✅ Successfully marked: ${successCount}\n❌ Failed: ${failCount}`;
+        if (errors.length > 0) {
+            message += '\n\nErrors:\n' + errors.join('\n');
+        }
+        alert(message);
         
         // Reload submissions
         await handleViewSubmissions(viewingSubmissions);
