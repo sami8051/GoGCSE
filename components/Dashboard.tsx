@@ -255,7 +255,7 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Recent Activity */}
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Exam History</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Mock Exam History</h2>
 
                 {
                     loading ? (

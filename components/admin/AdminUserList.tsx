@@ -441,11 +441,11 @@ const AdminUserList: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Exam History */}
+                            {/* Mock Exam History */}
                             <div>
                                 <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
                                     <FileText size={18} />
-                                    Exam History ({userExams.length})
+                                    Mock Exam History ({userExams.length})
                                 </h4>
                                 {loadingExams ? (
                                     <p className="text-slate-400">Loading exam history...</p>
